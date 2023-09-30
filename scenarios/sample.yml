@@ -1,0 +1,38 @@
+---
+# Default scenario file
+name: Sample Linux scenario
+description: Build two Linux VMs, web and database server.
+author: RIC1
+difficulty: easy
+systems:
+  - name: web server
+    base: Ubuntu13
+    ip: 172.16.0.2
+    accounts:
+      - username: root
+        password: <privileged_user_password>
+        privileged: true
+      - username: www-data
+        password: <regular_user_password>
+        privileged: false
+    services:
+      - name: "apache/online_marketplace"
+      - ENV_DB_IP: 172.16.0.3
+      - ENV_DB_PORT: 3306
+    vulnerabilities:
+      - name: "web/sql_injection"
+      - name: "web/weak_admin_password"
+  - name: database server
+    base: Debian10
+    ip: 172.16.0.3
+    accounts:
+      - username: root
+        password: <privileged_user_password>
+        privileged: true
+      - username: mysql
+        password: <regular_user_password>
+        privileged: false
+    services:
+      - name: "db/mysql"
+    vulnerabilities:
+      - name: "linux/local_escalation/buffer_overflow"
