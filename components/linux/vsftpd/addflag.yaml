@@ -1,0 +1,15 @@
+---
+- name: Place flag on root user's desktop
+  hosts: test-ubuntu
+  become: yes
+  become_user: root
+
+  tasks:
+    - name: touch a flag file in root user's desktop
+      lineinfile:
+        path: /flag.txt
+        line: flag{This_is_a_testing_flag}
+        create: yes
+        owner: root
+        group: root
+        mode: 0700
