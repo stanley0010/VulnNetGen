@@ -1,0 +1,8 @@
+- name: touch a flag file in root user's desktop
+  lineinfile:
+    path: /flag.txt
+    line: flag{This_is_a_testing_flag}
+    create: yes
+    owner: root
+    group: root
+    mode: 0700
