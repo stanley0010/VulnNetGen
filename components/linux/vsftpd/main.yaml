@@ -1,7 +1,7 @@
 ---
 - name: install vsftpd 2.3.4
-  hosts: test-ubuntu
-  become: yes
+  hosts: all
+  become: true
   become_user: root
 
   tasks:
@@ -15,17 +15,11 @@
       apt:
         name: ftp
         state: present
-        update_cache: yes
 
     - name: apt install build-essential
       apt:
         name: build-essential
         state: present
-  
-    - name: delete the directory vsftpd-2.3.4-infected if possible
-      file:
-        state: absent
-        path: /vsftpd-2.3.4-infected
 
     - name: clone github repo
       git:
@@ -35,7 +29,7 @@
     - name: modify the Makefile
       lineinfile:
         path: /vsftpd-2.3.4-infected/Makefile
-        regexp: '^LINK'
+        regexp: "^LINK"
         line: LINK = -Wl,-s,-lcrypt
 
     - name: build vsftpd
@@ -59,7 +53,7 @@
         owner: root
         group: root
         mode: 775
-    
+
     - name: copy vsftpd.8 to /usr/local/man/man8
       copy:
         remote_src: true
@@ -75,7 +69,7 @@
         dest: /usr/local/man/man5
         owner: root
         group: root
-      
+
     - name: copy vsftpd.conf to /etc
       copy:
         remote_src: true
@@ -100,10 +94,15 @@
     - name: modify the /etc/vsftpd.conf
       lineinfile:
         path: /etc/vsftpd.conf
-        regexp: 'local_enable'
+        regexp: "local_enable"
         line: local_enable=YES
 
     - name: run vsftpd
       shell:
         cmd: /usr/local/sbin/vsftpd &
         chdir: /
+
+    - name: delete the directory vsftpd-2.3.4-infected if possible
+      file:
+        state: absent
+        path: /vsftpd-2.3.4-infected

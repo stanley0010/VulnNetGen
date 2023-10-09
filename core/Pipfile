@@ -5,6 +5,8 @@ name = "pypi"
 
 [packages]
 python-vagrant = "*"
+python-terraform = "*"
+pyyaml = "*"
 
 [dev-packages]
 
