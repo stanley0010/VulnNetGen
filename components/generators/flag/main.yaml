@@ -1,8 +1,8 @@
-- name: touch a flag file in root user's desktop
+- name: create a flag file given a path and who can access it
   lineinfile:
-    path: /flag.txt
-    line: flag{This_is_a_testing_flag}
+    path: "/flag.txt"
+    line: "flag{This_is_a_testing_flag}"
     create: yes
-    owner: root
-    group: root
-    mode: 0700
+    owner: "root"
+    group: "root"
+    mode: "0700"
