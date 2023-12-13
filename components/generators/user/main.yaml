@@ -1,0 +1,7 @@
+- name: Add the user 'test_user' with a bash shell
+  ansible.builtin.user:
+    name: test_user
+    password: test_password
+    system: false
+    shell: /bin/bash
+    create_home: yes

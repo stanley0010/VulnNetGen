@@ -1,0 +1,101 @@
+- name: apt install git
+  apt:
+    name: git
+    state: present
+    update_cache: yes
+
+- name: apt install ftp
+  apt:
+    name: ftp
+    state: present
+
+- name: apt install build-essential
+  apt:
+    name: build-essential
+    state: present
+
+- name: clone github repo
+  git:
+    repo: https://github.com/nikdubois/vsftpd-2.3.4-infected.git
+    dest: /vsftpd-2.3.4-infected
+
+- name: modify the Makefile
+  lineinfile:
+    path: /vsftpd-2.3.4-infected/Makefile
+    regexp: "^LINK"
+    line: LINK = -Wl,-s,-lcrypt
+
+- name: build vsftpd
+  make:
+    chdir: /vsftpd-2.3.4-infected
+
+- name: add the user 'nobody'
+  user:
+    name: nobody
+
+- name: create a directory /usr/share/empty/
+  file:
+    path: /usr/share/empty
+    state: directory
+
+- name: copy vsftpd to /usr/local/sbin/vsftpd
+  copy:
+    remote_src: true
+    src: /vsftpd-2.3.4-infected/vsftpd
+    dest: /usr/local/sbin/vsftpd
+    owner: root
+    group: root
+    mode: 775
+
+- name: copy vsftpd.8 to /usr/local/man/man8
+  copy:
+    remote_src: true
+    src: /vsftpd-2.3.4-infected/vsftpd.8
+    dest: /usr/local/man/man8
+    owner: root
+    group: root
+
+- name: copy vsftpd.conf.5 to /usr/local/man/man5
+  copy:
+    remote_src: true
+    src: /vsftpd-2.3.4-infected/vsftpd.conf.5
+    dest: /usr/local/man/man5
+    owner: root
+    group: root
+
+- name: copy vsftpd.conf to /etc
+  copy:
+    remote_src: true
+    src: /vsftpd-2.3.4-infected/vsftpd.conf
+    dest: /etc
+    owner: root
+    group: root
+
+- name: craete a directory /var/ftp/
+  file:
+    path: /var/ftp
+    state: directory
+    owner: root
+    group: root
+    mode: og-w
+
+- name: add the user 'ftp' with home /var/ftp/
+  user:
+    name: ftp
+    home: /var/ftp
+
+- name: modify the /etc/vsftpd.conf
+  lineinfile:
+    path: /etc/vsftpd.conf
+    regexp: "local_enable"
+    line: local_enable=YES
+
+- name: run vsftpd
+  shell:
+    cmd: /usr/local/sbin/vsftpd &
+    chdir: /
+
+- name: delete the directory vsftpd-2.3.4-infected if possible
+  file:
+    state: absent
+    path: /vsftpd-2.3.4-infected

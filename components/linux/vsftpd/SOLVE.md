@@ -1,1 +1,0 @@
-https://westoahu.hawaii.edu/cyber/forensics-weekly-executive-summmaries/8424-2/ 
