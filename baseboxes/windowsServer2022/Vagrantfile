@@ -1,6 +1,12 @@
+vagrant_name = "windowsServer2022"
 Vagrant.configure("2") do |config|
     config.vm.box = "gusztavvargadr/windows-server"
     config.vm.network "private_network", type: "dhcp"
+    config.vm.define vagrant_name
+
+    config.vm.provider "virtualbox" do |v|
+        v.name = vagrant_name
+    end
 
     # config.vm.provision "ansible" do |ansible|
     #   ansible.verbose = "v"
