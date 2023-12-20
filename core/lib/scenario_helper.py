@@ -30,7 +30,17 @@ def get_setting_from_scenario(scenario_path: str, system_name: str, key: str) ->
             else:
                 return system[key]
 
-
+def get_systems_name(scenario_path: str) -> list:
+    """Return a list of system(s) name"""
+    try:
+        f = open(scenario_path + "/scenario.yaml", 'r')
+    except FileNotFoundError:
+        print("Scenario file not found")
+        return None
+    else:
+        with open(scenario_path + "/scenario.yaml", 'r') as f:
+            scenario = safe_load(f)
+            return [elem['name'] for elem in scenario["systems"]]
 
 def create_scenario(scenario_name: str):
     project_dir = os.path.join(
@@ -40,15 +50,16 @@ def create_scenario(scenario_name: str):
 
     scenario_path = "../scenarios/" + scenario_name
 
-    ip = get_setting_from_scenario(
-        scenario_path, "ftp", "ip")
-    base = get_setting_from_scenario(scenario_path,"ftp","base")
-    users = get_setting_from_scenario(scenario_path,"ftp","accounts")
-    vulnerabilities = get_setting_from_scenario(
-        scenario_path, "ftp", "vulnerabilities")['name']
-    
-    flag = get_setting_from_scenario(
-        scenario_path, "ftp", "generators")['args']['flag']
+    for system_name in get_systems_name(scenario_path):
+        ip = get_setting_from_scenario(
+            scenario_path, system_name, "ip")
+        base = get_setting_from_scenario(scenario_path,system_name,"base")
+        users = get_setting_from_scenario(scenario_path,system_name,"accounts")
+        vulnerabilities = get_setting_from_scenario(
+            scenario_path, system_name, "vulnerabilities")['name']
+        
+        flag = get_setting_from_scenario(
+            scenario_path, system_name, "generators")['args']['flag']
     
     vagrant_helper.create_vagrantfile_from_template(
         f"../baseboxes/{base}", project_dir)

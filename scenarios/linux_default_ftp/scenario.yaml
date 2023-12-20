@@ -26,5 +26,3 @@ systems:
           owner: root
           group: root
           mode: 0700
-  - name: attacker
-  - name: test
