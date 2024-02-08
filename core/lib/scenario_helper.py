@@ -4,6 +4,8 @@ import vagrant
 import shutil
 import lib.ansible_helper as ansible_helper
 import lib.vagrant_helper as vagrant_helper
+from random import randint
+import time
 
 def get_dict_by_key_from_list(list: list, key, value) -> dict:
     """Get a dictionary in a list the key value pair matches"""
@@ -43,6 +45,9 @@ def get_systems_name(scenario_path: str) -> list:
             return [elem['name'] for elem in scenario["systems"]]
 
 def create_scenario(scenario_name: str):
+
+    start_time = time.time()
+
     project_dir = os.path.join(
         "../projects", datetime.datetime.now().strftime('%Y%m%d_%H%M%S'))
     os.makedirs(project_dir)
@@ -66,6 +71,8 @@ def create_scenario(scenario_name: str):
     
     vagrant_helper.write_vagrantfile_ip(ip , project_dir + "/Vagrantfile")
 
+    vagrant_helper.change_vm_name(system_name + datetime.datetime.now().strftime('%Y%m%d_%H%M%S'), project_dir + "/Vagrantfile")
+
     ansible_helper.replace_flag(flag, project_dir)
 
     ansible_helper.create_users(users, project_dir)
@@ -74,6 +81,22 @@ def create_scenario(scenario_name: str):
 
     shutil.copyfile('../components/generators/playbook_template.yaml', project_dir + "/playbook.yaml")
 
+    if os.path.exists(f"../components/{vulnerabilities}/files"):
+        shutil.copytree(f"../components/{vulnerabilities}/files", project_dir + "/playbooks/files")
+
     log_cm = vagrant.make_file_cm(project_dir + '/deployment.log')
     v1 = vagrant.Vagrant(project_dir, out_cm=log_cm, err_cm=log_cm)
+
+    # try:
+    #     v1.up()
+    # except Exception:
+    #     v1.destroy()
+    
     v1.up()
+
+    # End timer
+    end_time = time.time()
+
+    # Calculate elapsed time
+    elapsed_time = end_time - start_time
+    print("Elapsed time: ", elapsed_time) 
