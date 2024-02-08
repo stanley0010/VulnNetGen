@@ -1,4 +1,6 @@
 - name: Add the user 'test_user' with a bash shell
+  become: true
+  become_user: root
   ansible.builtin.user:
     name: test_user
     password: test_password

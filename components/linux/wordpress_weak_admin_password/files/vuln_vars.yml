@@ -1,0 +1,30 @@
+---
+#System Settings
+php_modules:
+  [
+    "php-curl",
+    "php-gd",
+    "php-mbstring",
+    "php-xml",
+    "php-xmlrpc",
+    "php-soap",
+    "php-intl",
+    "php-zip",
+  ]
+
+#MySQL Settings
+mysql_root_password: "vulnNetGen_root_839381"
+mysql_db: "wordpress"
+mysql_user: "sammy"
+mysql_password: "an_easy_Passw0rd"
+
+#HTTP Settings
+http_host: "petpetgo.com"
+http_conf: "petpetgo.conf"
+http_port: "80"
+
+#WordPress Settings
+wordpress_url: 192.168.77.8
+wordpress_admin_user: "admin"
+wordpress_admin_password: "admin"
+wordpress_admin_email: "admin@petpetgo.com"

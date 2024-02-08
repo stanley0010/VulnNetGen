@@ -1,4 +1,6 @@
 - name: create a flag file given a path and who can access it
+  become: true
+  become_user: root
   lineinfile:
     path: "/flag.txt"
     line: "flag{This_is_a_testing_flag}"
