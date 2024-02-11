@@ -16,7 +16,7 @@ systems:
         password: regular_user_password
         privileged: false
     vulnerabilities:
-      - name: "linux/clean_wordpress"
+      - name: "linux/wordpress_weak_admin_password"
     generators:
       - name: flag
         path: ../components/generators/flag

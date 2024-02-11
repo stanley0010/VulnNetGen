@@ -24,7 +24,7 @@ http_conf: "petpetgo.conf"
 http_port: "80"
 
 #WordPress Settings
-wordpress_url: 192.168.77.8
+wordpress_url: 192.168.77.8 # FIXME: hardcoded IP #TODO
 wordpress_admin_user: "admin"
 wordpress_admin_password: "admin"
 wordpress_admin_email: "admin@petpetgo.com"
