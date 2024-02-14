@@ -1,0 +1,28 @@
+---
+- hosts: all
+  become: true
+  become_user: root
+  
+  tasks:
+    - name: apt install git
+      apt:
+        name: git
+        state: present
+        update_cache: yes
+
+    - name: apt install python3-pip 
+      apt:
+        name: python3-pip
+        state: present
+        update_cache: yes
+
+    - name: clone github repo
+      git:
+        repo: https://github.com/ReFirmLabs/binwalk.git
+        dest: /binwalk
+        version: v2.3.2
+
+    - name: sudo python3 setup.py install
+      shell:
+        cmd: python3 setup.py install
+        chdir: /binwalk

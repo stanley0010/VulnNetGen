@@ -1,0 +1,45 @@
+---
+- hosts: all
+  become: true
+  become_user: root
+  
+  tasks:
+    - name: apt update
+      apt:
+        name: "*"
+        state: latest
+
+    - name: apt install python3-pip
+      apt: 
+        name: python3-pip
+        state: present
+        update_cache: yes
+
+    - name: apt install libcurl4-openssl-dev
+      apt:
+        name: libcurl4-openssl-dev
+        state: present
+        update_cache: yes
+
+    - name: apt install libssl-dev
+      apt:
+        name: libssl-dev
+        state: present
+        update_cache: yes
+
+    - name: pip install pyload-ng==0.5.0b3.dev30
+      pip:
+        name: pyload-ng==0.5.0b3.dev30
+
+    - name: pip install Flask==2.2.3
+      pip:
+        name: Flask==2.2.3
+
+    - name: pip install Werkzeug==2.2.2
+      pip:
+        name: Werkzeug==2.2.2
+
+    - name: run pyload
+      shell:
+        cmd: pyload &
+        chdir: /
