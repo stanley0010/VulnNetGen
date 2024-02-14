@@ -1,0 +1,38 @@
+---
+- hosts: all
+  become: true
+  become_user: root
+  
+  tasks:
+    - name: apt install default-jre scala
+      apt:
+        pkg:
+          - default-jre
+          - scala
+        state: present
+        update_cache: yes
+
+    - name: Download spark-3.1.2-bin-hadoop3.2.tgz
+      get_url:
+        url: https://archive.apache.org/dist/spark/spark-3.1.2/spark-3.1.2-bin-hadoop3.2.tgz
+        dest: /
+
+    - name: tar -xf spark-3.1.2-bin-hadoop3.2.tgz
+      shell:
+        cmd: tar -xf spark-3.1.2-bin-hadoop3.2.tgz
+        chdir: /
+
+    - name: move file
+      shell:
+        cmd: mv spark-3.1.2-bin-hadoop3.2 /usr/local/spark
+        chdir: /
+
+    - name: create spark-defaults.conf
+      shell:
+        cmd: echo 'spark.acls.enable true' > /usr/local/spark/conf/spark-defaults.conf
+        chdir: /
+    
+    - name: run start-master.sh
+      shell:
+        cmd: /usr/local/spark/sbin/start-master.sh
+        chdir: /
