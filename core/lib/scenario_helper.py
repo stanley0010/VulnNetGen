@@ -4,7 +4,7 @@ import vagrant
 import shutil
 import lib.ansible_helper as ansible_helper
 import lib.vagrant_helper as vagrant_helper
-from random import randint
+import random
 import time
 
 def get_dict_by_key_from_list(list: list, key, value) -> dict:
@@ -62,9 +62,10 @@ def create_scenario(scenario_name: str):
         users = get_setting_from_scenario(scenario_path,system_name,"accounts")
         vulnerabilities = get_setting_from_scenario(
             scenario_path, system_name, "vulnerabilities")['name']
-        
         flag = get_setting_from_scenario(
             scenario_path, system_name, "generators")['args']['flag']
+        if flag == 'random':
+            flag = f'flag{{{hex(random.getrandbits(128))[2:]}}}'
     
     vagrant_helper.create_vagrantfile_from_template(
         f"../baseboxes/{base}", project_dir)
