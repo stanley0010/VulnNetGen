@@ -9,8 +9,9 @@ python-terraform = "*"
 pyyaml = "*"
 passlib = "*"
 click = "*"
-colorama = "*"
 prettytable = "*"
+flask = "*"
+colorama = "*"
 
 [dev-packages]
 

@@ -1,10 +1,9 @@
 #!/usr/bin/python3
-import lib.scenario_helper as scenario_helper
-import lib.vagrant_helper as vagrant_helper
-import lib.ansible_helper as ansible_helper
 import os
 import click
 from prettytable import PrettyTable
+from lib.scenario_helper import start_scenario
+from lib.gui.app import app
 
 @click.group()
 def VulnNetGen():
@@ -37,7 +36,12 @@ def validate_scenario(ctx, param, value):
               callback=validate_scenario)
 def run_scenarios(scenario):
     """Running the specified scenerios"""    
-    scenario_helper.create_scenario(scenario)
+    start_scenario(scenario)
     
+@VulnNetGen.command("gui")
+def start_gui():
+    """Start the Flask server"""
+    app.run()
+
 if __name__ == "__main__":
     VulnNetGen()
