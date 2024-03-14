@@ -1,5 +1,4 @@
 ---
-# Default scenario file
 name: Linux wordpress
 description: vulnerable wordpress with weak admin password
 author: RIC1
@@ -17,6 +16,8 @@ systems:
         privileged: false
     vulnerabilities:
       - name: "linux/wordpress_weak_admin_password"
+        args:
+          copy_files: true
     generators:
       - name: flag
         path: ../components/generators/flag

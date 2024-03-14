@@ -1,0 +1,44 @@
+---
+# Default scenario file
+name: Linux careless developer
+description: leftover ssh key in ftp server, which contains a RCE vulnerability
+author: RIC1
+difficulty: easy
+systems:
+  - name: ftp
+    base: ubuntu22
+    ip: 192.168.77.7
+    accounts:
+      - name: root
+        password: root
+        privileged: true
+      - name: www-data
+        password: www-data
+        privileged: true
+    vulnerabilities:
+      - name: "linux/vsftpd_rce"
+    generators:
+      - name: flag
+        path: ../components/generators/flag
+        args:
+          flag: flag{linux_vsftp_root_rce}
+          path: /flag.txt
+          owner: root
+          group: root
+          mode: 0700
+  - name: developer
+    base: ubuntu22
+    ip: 192.168.77.8
+    vulnerabilities:
+      - name: "linux/lateral_movement_ssh"
+        args:
+          jump_host: ftp
+    generators:
+      - name: flag
+        path: ../components/generators/flag
+        args:
+          flag: flag{linux_careless_developer}
+          path: /flag.txt
+          owner: root
+          group: root
+          mode: 0700

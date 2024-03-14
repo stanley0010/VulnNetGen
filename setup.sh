@@ -6,7 +6,7 @@ sudo apt-get install ansible -y
 sudo apt-get install vagrant -y
 sudo apt-get install virtualbox -y
 
-# For using Windows Box
+# Run the following to use Windows Box
 sudo gem install evil-winrm
 sudo bash -c "echo $'\n' >> /etc/ssl/openssl.cnf"
 sudo bash -c "echo '[provider_sect]' >> /etc/ssl/openssl.cnf"
