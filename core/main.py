@@ -1,6 +1,6 @@
-import lib.scenario_helper as scenario_helper
+from lib.scenario_helper import start_scenario
 
 def main():
-    scenario_helper.start_scenario("linux_careless_developer")
+    start_scenario("linux_careless_developer")
 
 main()

@@ -1,10 +1,10 @@
 import shutil
-from yaml import safe_load
 import os, datetime
 import vagrant
-import lib.ansible_helper as ansible_helper
-import lib.vagrant_helper as vagrant_helper
 import time
+from yaml import safe_load
+from lib.ansible_helper import create_flag_playbook, create_users, create_vulnerability_playbook
+from lib.vagrant_helper import init_vm, create_vagrantfile
 
 def create_vm_playbook(project_path: str, system_name: str, users, flag, vulnerabilities) -> None:
     with open(project_path + f"/playbooks/{system_name}/playbook.yaml", 'w') as f:
@@ -76,7 +76,7 @@ def start_scenario(scenario_name: str):
     except IOError:
         raise 
 
-    vagrant_helper.create_vagrantfile(project_dir)
+    create_vagrantfile(project_dir)
 
     system_names = get_systems_name(scenario_path)
 
@@ -100,15 +100,15 @@ def start_scenario(scenario_name: str):
             hosts_write.write(f"{system_name} ansible_host={ip} ansible_ssh_private_key_file=.vagrant/machines/{system_name}/virtualbox/private_key\n\n")
         
         # initialize the Vagrantfile for each VM
-        vagrant_helper.init_vm(base, ip, system_name, project_dir + "/Vagrantfile")
+        init_vm(base, ip, system_name, project_dir + "/Vagrantfile")
 
         if flag:
-            ansible_helper.create_flag_playbook(flag, system_name, project_dir)
+            create_flag_playbook(flag, system_name, project_dir)
 
-        ansible_helper.create_users(users, system_name, project_dir)
+        create_users(users, system_name, project_dir)
 
         for vuln in vulnerabilities:
-            ansible_helper.create_vulnerability_playbook(system_name, vuln, project_dir)
+            create_vulnerability_playbook(system_name, vuln, project_dir)
             
         create_vm_playbook(project_dir, system_name, users, flag, vulnerabilities)
 
