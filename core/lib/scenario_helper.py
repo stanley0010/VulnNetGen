@@ -1,12 +1,24 @@
+import shutil
 from yaml import safe_load
 import os, datetime
 import vagrant
-import shutil
 import lib.ansible_helper as ansible_helper
 import lib.vagrant_helper as vagrant_helper
-from random import randint
 import time
 
+def create_vm_playbook(project_path: str, system_name: str, users, flag, vulnerabilities) -> None:
+    with open(project_path + f"/playbooks/{system_name}/playbook.yaml", 'w') as f:
+        if users or flag:
+            f.write(f"- name: playbook of {system_name} \n  hosts: {system_name}\n")
+            f.write("  tasks:\n")
+        if users:
+            f.write(f"    - include_tasks: ./users.yaml\n")
+        if flag:
+            f.write(f"    - include_tasks: ./flag.yaml\n")
+        for vuln in vulnerabilities:
+            f.write(f"\n- name: {vuln['name']}\n  ansible.builtin.import_playbook: vuln_{vuln['name'].rsplit('/',1)[1]}.yaml\n")
+        f.close()
+        
 def get_dict_by_key_from_list(list: list, key, value) -> dict:
     """Get a dictionary in a list the key value pair matches"""
     for i, item in enumerate(list):
@@ -14,7 +26,6 @@ def get_dict_by_key_from_list(list: list, key, value) -> dict:
             return list[i]
     return None
 
-# TODO: delete system_name
 def get_setting_from_scenario(scenario_path: str, system_name: str, key: str) -> str:
     """Get a setting from a scenario file, given the system name and the target key to read"""
     try:
@@ -27,10 +38,13 @@ def get_setting_from_scenario(scenario_path: str, system_name: str, key: str) ->
             scenario = safe_load(f)
             system = get_dict_by_key_from_list(
                 scenario["systems"], "name", system_name)
-            if type(system[key]) is list and len(system[key]) == 1:
-                return system[key][0]
-            else:
-                return system[key]
+            if key not in system:
+                return None
+            return system[key]
+            # if type(system[key]) is list and len(system[key]) == 1:
+            #     return system[key]
+            # else:
+            #     return system[key]
 
 def get_systems_name(scenario_path: str) -> list:
     """Return a list of system(s) name"""
@@ -44,7 +58,7 @@ def get_systems_name(scenario_path: str) -> list:
             scenario = safe_load(f)
             return [elem['name'] for elem in scenario["systems"]]
 
-def create_scenario(scenario_name: str):
+def start_scenario(scenario_name: str):
 
     start_time = time.time()
 
@@ -54,45 +68,60 @@ def create_scenario(scenario_name: str):
     os.makedirs(project_dir + "/playbooks")
 
     scenario_path = "../scenarios/" + scenario_name
+    shutil.copyfile(scenario_path + "/scenario.yaml", project_dir + "/scenario.yaml")
 
-    for system_name in get_systems_name(scenario_path):
+    try:
+        with open(project_dir + "/ansible.cfg", "w") as ansible_write:
+            ansible_write.write("[defaults]\ninventory = hosts\nhost_key_checking = False")
+    except IOError:
+        raise 
+
+    vagrant_helper.create_vagrantfile(project_dir)
+
+    system_names = get_systems_name(scenario_path)
+
+    for system_name in system_names:
+        os.makedirs(project_dir + f"/playbooks/{system_name}")
+
         ip = get_setting_from_scenario(
             scenario_path, system_name, "ip")
         base = get_setting_from_scenario(scenario_path,system_name,"base")
         users = get_setting_from_scenario(scenario_path,system_name,"accounts")
         vulnerabilities = get_setting_from_scenario(
-            scenario_path, system_name, "vulnerabilities")['name']
+            scenario_path, system_name, "vulnerabilities")
         
-        flag = get_setting_from_scenario(
-            scenario_path, system_name, "generators")['args']['flag']
-    
-    vagrant_helper.create_vagrantfile_from_template(
-        f"../baseboxes/{base}", project_dir)
-    
-    vagrant_helper.write_vagrantfile_ip(ip , project_dir + "/Vagrantfile")
+        if get_setting_from_scenario(scenario_path, system_name, "generators"):
+            flag = get_setting_from_scenario(scenario_path, system_name, "generators")[0]['args']['flag']
+        else:
+            flag = None
+        
+        # Write the hosts file
+        with open(project_dir + "/hosts", "a") as hosts_write:
+            hosts_write.write(f"{system_name} ansible_host={ip} ansible_ssh_private_key_file=.vagrant/machines/{system_name}/virtualbox/private_key\n\n")
+        
+        # initialize the Vagrantfile for each VM
+        vagrant_helper.init_vm(base, ip, system_name, project_dir + "/Vagrantfile")
 
-    vagrant_helper.change_vm_name(system_name + datetime.datetime.now().strftime('%Y%m%d_%H%M%S'), project_dir + "/Vagrantfile")
+        if flag:
+            ansible_helper.create_flag_playbook(flag, system_name, project_dir)
 
-    ansible_helper.replace_flag(flag, project_dir)
+        ansible_helper.create_users(users, system_name, project_dir)
 
-    ansible_helper.create_users(users, project_dir)
-
-    shutil.copyfile(f"../components/{vulnerabilities}/main.yaml", project_dir + f"/playbooks/vuln.yaml")
-
-    shutil.copyfile('../components/generators/playbook_template.yaml', project_dir + "/playbook.yaml")
-
-    if os.path.exists(f"../components/{vulnerabilities}/files"):
-        shutil.copytree(f"../components/{vulnerabilities}/files", project_dir + "/playbooks/files")
+        for vuln in vulnerabilities:
+            ansible_helper.create_vulnerability_playbook(system_name, vuln, project_dir)
+            
+        create_vm_playbook(project_dir, system_name, users, flag, vulnerabilities)
 
     log_cm = vagrant.make_file_cm(project_dir + '/deployment.log')
     v1 = vagrant.Vagrant(project_dir, out_cm=log_cm, err_cm=log_cm)
 
-    # try:
-    #     v1.up()
-    # except Exception:
-    #     v1.destroy()
-    
-    v1.up()
+    try:
+        v1.up()
+    except Exception:
+        v1.destroy()
+        raise
+
+    # v1.up()
 
     # End timer
     end_time = time.time()

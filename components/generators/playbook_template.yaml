@@ -1,7 +1,0 @@
-- name: playbook
-  hosts: all
-  tasks:
-    - include_tasks: ./playbooks/users.yaml
-    - include_tasks: ./playbooks/flag.yaml
-- name: vuln
-  ansible.builtin.import_playbook: ./playbooks/vuln.yaml
