@@ -41,7 +41,7 @@ def run_scenarios(scenario):
 @VulnNetGen.command("gui")
 def start_gui():
     """Start the Flask server"""
-    app.run()
+    app.run(debug=True)
 
 if __name__ == "__main__":
     VulnNetGen()
