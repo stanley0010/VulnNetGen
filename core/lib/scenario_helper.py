@@ -1,6 +1,10 @@
 import shutil
 import os, datetime
 import vagrant
+import shutil
+import lib.ansible_helper as ansible_helper
+import lib.vagrant_helper as vagrant_helper
+import random
 import time
 from yaml import safe_load
 from lib.ansible_helper import create_flag_playbook, create_users, create_vulnerability_playbook
@@ -92,6 +96,8 @@ def start_scenario(scenario_name: str):
         
         if get_setting_from_scenario(scenario_path, system_name, "generators"):
             flag = get_setting_from_scenario(scenario_path, system_name, "generators")[0]['args']['flag']
+            if flag == 'random':
+                flag = f'flag{{{hex(random.getrandbits(128))[2:]}}}'
         else:
             flag = None
         
