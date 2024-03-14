@@ -8,6 +8,9 @@ python-vagrant = "*"
 python-terraform = "*"
 pyyaml = "*"
 passlib = "*"
+click = "*"
+colorama = "*"
+prettytable = "*"
 
 [dev-packages]
 
