@@ -11,6 +11,7 @@ passlib = "*"
 click = "*"
 prettytable = "*"
 flask = "*"
+colorama = "*"
 
 [dev-packages]
 
