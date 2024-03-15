@@ -1,0 +1,29 @@
+{% block vm_input %}
+<div class="row row-cols-4 align-items-start">
+    <div class="grid gap-2" id="machine">
+        <div class="row">
+            <div class="col">
+                <div class="p-1 g-col-6">
+                    <img src="{{ url_for('static', filename='images/vm.png') }}" alt="VM" width="100" height="100" />
+                </div>
+            </div>
+            <div class="col-2">
+                <button type="button" class="btn btn-sm btn-danger"
+                    onclick="this.parentElement.parentElement.parentElement.remove();">X</button>
+            </div>
+        </div>
+        <div class=" p-1 g-col-6">
+            <div class="input-group input-group-sm mb-3">
+                <input type="text" class="form-control" placeholder="Machine name" aria-label="Machine name"
+                    aria-describedby="inputGroup-sizing-sm" />
+            </div>
+        </div>
+        <div class="p-1 g-col-6">
+            <div class="input-group input-group-sm mb-3">
+                <input type="text" class="form-control" placeholder="IP Address" aria-label="IP Address"
+                    aria-describedby="inputGroup-sizing-sm" />
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

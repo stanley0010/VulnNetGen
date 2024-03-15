@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block content %}
+Design Scenario
+<div class="row container-fluid text-center">
+    <div class="col">
+        {% include 'components/vm_input.html'%}
+    </div>
+    <div class="col-2">
+        <button type="button" class="btn btn-danger" onclick="addMachine()">+ Machine</button>
+    </div>
+</div>
+<script>
+    function addMachine() {
+        var machine = document.getElementById('machine');
+        var clone = machine.cloneNode(true);
+        machine.parentNode.appendChild(clone);
+    }
+</script>
+{% endblock %}
