@@ -7,9 +7,9 @@ app = Flask(__name__)
 def home():
     return render_template('home.html')
 
-@app.route("/create")
-def create_scenario():
-    return render_template('create_scenario.html', title="Create Scenario")
+@app.route("/design")
+def design_scenario():
+    return render_template('design_scenario.html', title="Design Scenario")
 
 @app.route("/import")
 def import_scenario():
