@@ -9,8 +9,8 @@ def home():
 
 @app.route("/design")
 def design_scenario():
-    return render_template('design_scenario.html', title="Design Scenario")
+    return render_template('design_scenario.html', import_scenario=False)
 
 @app.route("/import")
 def import_scenario():
-    return render_template('import_scenario.html', title="Import Scenario")
+    return render_template('import_scenario.html', import_scenario=True)
