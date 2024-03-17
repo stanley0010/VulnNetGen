@@ -1,0 +1,27 @@
+<div class="list-group list-group-flush pb-5">
+    <a class="list-group-item text-bg-dark">
+        List of Machines
+    </a>
+    {% for vm in vm_list %}
+    <a href="#" onclick="notify(this)" class="list-group-item list-group-item-action">
+        {{vm}}
+    </a>
+    {% endfor %}
+</div>
+<script>
+    function resetElements() {
+        // Get all elements with "active" class
+        var els = document.getElementsByClassName("active");
+
+        // Loop over Elements to remove active class;
+        for (var i = 0; i < els.length; i++) {
+            els[i].classList.remove('active')
+        }
+    }
+
+    function notify(el) {
+        resetElements();
+        console.log(el.innerHTML);
+        el.classList.add('active');
+    }
+</script>

@@ -1,0 +1,115 @@
+<div class="mb-3 row">
+    <label for="computerName" class="col-sm-2 col-form-label">Computer Name</label>
+    <div class="col-sm-10">
+        <input class="form-control" type="text" placeholder="Default input" aria-label="Computer Name">
+    </div>
+</div>
+<div class="mb-3 row">
+    <label for="ip" class="col-sm-2 col-form-label">IP Address</label>
+    <div class="col-sm-10">
+        <input class="form-control" type="text" placeholder="192.168.77.7" aria-label="IP Address">
+    </div>
+</div>
+<div class="mb-3 row">
+    <label for="operatingSystem" class="col-sm-2 col-form-label">Operating System</label>
+    <div class="col-sm-10">
+        <select class="form-select" aria-label="Operating System">
+            <option value="Windows Server 2022">Windows Server 2022</option>
+            <option value="Ubuntu 22">Ubuntu 22</option>
+        </select>
+    </div>
+</div>
+<div class="mb-3 row">
+    <label for="Accounts" class="col-sm-2 col-form-label">Accounts</label>
+    <div class="row-sm-10 text-center">
+        <div id="account-div">
+            <div class="input-group m-3" id="account-input-group">
+                <input type="text" aria-label="Username" placeholder="Username" class="form-control">
+                <input type="text" aria-label="Password" placeholder="Password" class="form-control">
+                <div class="form-check px-5 m-auto">
+                    <input class="form-check-input" type="checkbox" value="" id="Privileged">
+                    <label class="form-check-label" for="Privileged">
+                        Privileged
+                    </label>
+                </div>
+                <!-- FIXME: removing the last element will cause error -->
+                <button type="button" class="btn btn-sm btn-danger m-auto" onclick="this.parentElement.remove();"
+                    style="border-radius: 6px;">X</button>
+            </div>
+        </div>
+        <button type="button" class="btn btn-dark btn-sm" onclick="addAccount()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-plus-circle"
+                viewBox="0 0 16 16">
+                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
+                <path
+                    d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
+            </svg>
+        </button>
+    </div>
+</div>
+<div class="mb-3 row">
+    <label for="Vulnerabilities" class="col-sm-2 col-form-label">Vulnerabilities</label>
+    <div class="row-sm-10 text-center">
+        <div id="vuln-div">
+            <div class="input-group m-3" id="vuln-input-group">
+                <select class="form-select" aria-label="Vulnerabilities">
+                    <option value="vuln1">vuln1</option>
+                    <option value="vuln2">vuln2</option>
+                </select>
+                <button class="btn btn-primary rounded-button mx-5" type="button" id="button-addon2">...</button>
+                <!-- FIXME: removing the last element will cause error -->
+                <button type="button" class="btn btn-sm btn-danger m-auto" onclick="this.parentElement.remove();"
+                    style="border-radius: 6px;">X</button>
+            </div>
+        </div>
+        <button type="button" class="btn btn-dark btn-sm" onclick="addVulnerability()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-plus-circle"
+                viewBox="0 0 16 16">
+                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
+                <path
+                    d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
+            </svg>
+        </button>
+    </div>
+</div>
+<div class="mb-3 row">
+    <label for="Generators" class="col-sm-2 col-form-label">Generators</label>
+    <div class="row-sm-10 text-center">
+        <div id="generator-div">
+            <div class="input-group m-3" id="generator-input-group">
+                <select class="form-select" aria-label="Generators">
+                    <option value="flag">flag</option>
+                </select>
+                <button class="btn btn-primary rounded-button mx-5" type="button" id="button-addon2">...</button>
+                <!-- FIXME: removing the last element will cause error -->
+                <button type="button" class="btn btn-sm btn-danger m-auto" onclick="this.parentElement.remove();"
+                    style="border-radius: 6px;">X</button>
+            </div>
+        </div>
+        <button type="button" class="btn btn-dark btn-sm" onclick="addGenerator()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-plus-circle"
+                viewBox="0 0 16 16">
+                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
+                <path
+                    d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
+            </svg>
+        </button>
+    </div>
+</div>
+<script>
+    function addAccount() {
+        var machine = document.getElementById('account-input-group');
+        var clone = machine.cloneNode(true);
+        machine.parentNode.appendChild(clone);
+    }
+    function addVulnerability() {
+        var machine = document.getElementById('vuln-input-group');
+        var clone = machine.cloneNode(true);
+        machine.parentNode.appendChild(clone);
+    }
+    function addGenerator() {
+        var machine = document.getElementById('generator-input-group');
+        var clone = machine.cloneNode(true);
+        machine.parentNode.appendChild(clone);
+    }
+</script>
