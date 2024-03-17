@@ -4,11 +4,11 @@
         <div class="progress-bar bg-danger" style="width: {{progress}}%"></div>
     </div>
     <button type="button" class="position-absolute top-0 start-0 translate-middle btn btn-danger btn-sm rounded-pill"
-        style="width: 2rem; height: 2rem">
+        style="width: 2rem; height: 2rem" onclick="window.location.href='{{ url_for( 'design_scenario') }}';">
         <p style="margin: -3rem;">Design</p>
     </button>
-    <button type="button" class="position-absolute top-0 start-50 translate-middle btn btn-danger btn-sm rounded-pill"
-        style="width: 2rem; height: 2rem">
+    <button type=" button" class="position-absolute top-0 start-50 translate-middle btn btn-danger btn-sm rounded-pill"
+        style="width: 2rem; height: 2rem" onclick="window.location.href='{{ url_for( 'configure_scenario') }}';">
         <p style="margin: -3rem;">Configure</p>
     </button>
     <button type="button" class="position-absolute top-0 start-100 translate-middle btn btn-danger btn-sm rounded-pill"

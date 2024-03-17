@@ -1,5 +1,24 @@
 {% extends 'base.html' %}
 
 {% block content %}
-Create and Run Scenario
+
+{% if import_scenario %}
+<p class="text-center fw-bold fs-3 text-decoration-underline p-4"> Import Existing Scenario </p>
+{% else %}
+<p class="text-center fw-bold fs-3 text-decoration-underline p-4"> Create and Run Scenario </p>
+{% endif %}
+
+{% with progress=50 %}
+{% include 'components/progress_bar.html'%}
+{% endwith %}
+<div class="row container-fluid text-center mt-5 mx-auto">
+    <div class="col-2 container bg-dark mx-4">
+        {% with vm_list=["web", "mysql_01", "ftp", "DC01", "ricci.chan"]%}
+        {% include 'components/vm_list.html'%}
+        {% endwith%}
+    </div>
+    <div class="col container bg-dark p-5 mx-4 text-start">
+        {% include 'components/vm_configure.html'%}
+    </div>
+</div>
 {% endblock %}
