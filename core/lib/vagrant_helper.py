@@ -15,8 +15,7 @@ def get_vm_box_from_list(base:str) -> str:
             (key, val) = line.split("=",1)
             if base == key:
                 return val
-            else:
-                return None
+        return None
 
 def init_vm(base: str, ip: str, machine_name: str, vagrantfile_output_path: str) -> None:
     """Read from the 'vm_vagrantfile_template' and replace the ip and machine name. Finally, write to the Vagrantfile."""
