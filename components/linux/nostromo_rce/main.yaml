@@ -1,0 +1,60 @@
+---
+- hosts: $hostname
+  become: true
+  become_user: root
+  
+  tasks:
+    - name: apt update
+      apt:
+        name: "*"
+        state: latest
+
+    - name: apt install build-essential
+      apt:
+        name: build-essential
+        state: present
+        update_cache: yes
+
+    - name: apt install libssl-dev
+      apt:
+        name: libssl-dev
+        state: present
+        update_cache: yes
+
+    - name: download http://www.nazgul.ch/dev/nostromo-1.9.6.tar.gz
+      get_url:
+        url: http://www.nazgul.ch/dev/nostromo-1.9.6.tar.gz
+        dest: /
+
+    - name: tar -xf nostromo-1.9.6.tar.gz
+      shell:
+        cmd: tar -xf nostromo-1.9.6.tar.gz
+        chdir: /
+      
+    - name: make
+      shell:
+        cmd: make
+        chdir: /nostromo-1.9.6
+
+    - name: make
+      shell:
+        cmd: make install
+        chdir: /nostromo-1.9.6
+
+    - name: rename nhttpd.conf-dist to nhttpd.conf
+      shell:
+        cmd: mv nhttpd.conf-dist nhttpd.conf
+        chdir: /var/nostromo/conf
+
+    - name: add the user '_nostromo'
+      user:
+        name: _nostromo
+
+    - name: chmod -R 777 /var/nostromo/logs
+      shell:
+        cmd: chmod -R 777 /var/nostromo/logs
+
+    - name: run nhttpd
+      shell:
+        cmd: nhttpd
+        chdir: /

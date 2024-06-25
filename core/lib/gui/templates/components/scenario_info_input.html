@@ -1,0 +1,48 @@
+<div class="col container mb-5 text-start">
+    <div class="mb-3 row">
+        <label for="scenarioName" class="col-sm-2 col-form-label">Scenario Name</label>
+        <div class="col-sm-10">
+            <input class="form-control" type="text" id="scenarioName" aria-label="Scenario Name"
+                onblur="updateScenarioName(this)">
+        </div>
+    </div>
+    <div class="mb-3 row">
+        <label for="author" class="col-sm-2 col-form-label">Author</label>
+        <div class="col-sm-10">
+            <input class="form-control" type="text" id="author" aria-label="Author" onblur="updateAuthor(this)">
+        </div>
+    </div>
+    <div class="mb-3 row">
+        <label for="difficulty" class="col-sm-2 col-form-label">Difficulty</label>
+        <div class="col-sm-10">
+            <input class="form-control" type="text" id="difficulty" aria-label="Difficulty"
+                onblur="updateDifficulty(this)">
+        </div>
+    </div>
+    <div class="mb-3 row" id="domain_names" hidden>
+        <label for="domain_names-input" class="col-sm-2 col-form-label">Domain Name(s)</label>
+        <div class="row-sm-10 text-center">
+            <div id="domain_names-div">
+                <div class="input-group m-3" id="domain_names-input-group" hidden>
+                    <input id="domain_name-input" type="text" aria-label="Domain Name" placeholder="Domain Name"
+                        class="form-control" onfocus="this.oldValue = this.value;"
+                        onchange="updateDomainName(this); this.oldValue = this.value;">
+                    <button type="button" class="btn btn-sm btn-danger mx-4" onclick="removeDomainName(this);"
+                        style="border-radius: 6px;">X</button>
+                </div>
+            </div>
+            <button type="button" class="btn btn-dark btn-sm" onclick="addDomainNameInput();">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor"
+                    class="bi bi-plus-circle" viewBox="0 0 16 16">
+                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
+                    <path
+                        d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
+                </svg>
+            </button>
+        </div>
+    </div>
+    <div class="mb-3">
+        <label for="scenarioDescription" class="form-label">Scenario Description</label>
+        <textarea class="form-control" id="scenarioDescription" rows="3" onblur="updateDescription(this)"></textarea>
+    </div>
+</div>

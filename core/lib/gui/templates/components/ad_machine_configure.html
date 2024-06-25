@@ -1,0 +1,233 @@
+{% include 'components/configure_modal_custom_args.html' %}
+
+<div class="mb-3 row" id="hostname">
+    <label for="hostname-input" class="col-sm-2 col-form-label">Hostname</label>
+    <div class="col-sm-10 align-content-center">
+        <input id="hostname-input" class="form-control" type="text" placeholder="Hostname" aria-label="Hostname"
+            onfocus="this.oldValue = this.value;"
+            onchange="updateListOfMachines(this); this.oldValue = this.value; convertToJSON();">
+    </div>
+</div>
+<div class="mb-3 row" id="ip">
+    <label for="ip-input" class="col-sm-2 col-form-label">IP</label>
+    <div class="col-sm-10 align-content-center">
+        <input id="ip-input" class="form-control" type="text" placeholder="IP" aria-label="IP"
+            onchange="convertToJSON();">
+    </div>
+</div>
+<div class="mb-3 row" id="type">
+    <label for="type-options" class="col-sm-2 col-form-label">Type</label>
+    <div class="col-sm-10 align-content-center">
+        <select class="form-select" aria-label="Type" id="type-options" onchange="updateDCType(this);convertToJSON();">
+            <option value="dc">DC</option>
+            <option value="server">Server</option>
+            <option value="workstation">Workstation</option>
+        </select>
+    </div>
+</div>
+<div class="mb-3 row" id="dc_type">
+    <label for="dc_type-options" class="col-sm-2 col-form-label">DC Type</label>
+    <div class="col-sm-10 align-content-center">
+        <select class="form-select" aria-label="DC Type" id="dc_type-options" onchange="convertToJSON();">
+            <option value="parent_dc">Parent DC</option>
+            <option value="child_dc">Child DC</option>
+        </select>
+    </div>
+</div>
+<div class="mb-3 row" id="dns_domain">
+    <label for="dns_domain-input" class="col-sm-2 col-form-label">DNS Domain</label>
+    <div class="col-sm-10 align-content-center">
+        <input id="dns_domain-input" class="form-control" type="text" placeholder="DNS Domain" aria-label="DNS Domain"
+            onchange="convertToJSON();">
+    </div>
+</div>
+<div class="mb-3 row" id="local_admin_password">
+    <label for="local_admin_password-input" class="col-sm-2 col-form-label">Local Admin Password</label>
+    <div class="col-sm-10 align-content-center">
+        <input id="local_admin_password-input" class="form-control" type="text" placeholder="Local Admin Password"
+            aria-label="Local Admin Password" onchange="convertToJSON();">
+    </div>
+</div>
+<div class="mb-3 row" id="domain">
+    <label for="domain-input" class="col-sm-2 col-form-label">Domain</label>
+    <div class="col-sm-10 align-content-center">
+        <input id="domain-input" class="form-control" type="text" placeholder="Domain" aria-label="Domain"
+            onchange="convertToJSON();">
+    </div>
+</div>
+<div class="mb-3 row" id="path">
+    <label for="path-input" class="col-sm-2 col-form-label">Path</label>
+    <div class="col-sm-10 align-content-center">
+        <input id="path-input" class="form-control" type="text" placeholder="Path" aria-label="Path"
+            onchange="convertToJSON();">
+    </div>
+</div>
+<div class="mb-3 row" id="local_groups">
+    <label for="local_groups-input" class="col-sm-2 col-form-label">Local Groups</label>
+    <div class="row-sm-10 text-center">
+        <div id="local_groups-div">
+            <div class="input-group m-3" id="local_groups-input-group" hidden>
+                <input id="local_groups-input" type="text" aria-label="GroupName" placeholder="GroupName"
+                    class="form-control" onchange="convertToJSON();">
+                <input type="text" aria-label="Username" placeholder="MachineName\\Username" class="form-control"
+                    onchange="convertToJSON();">
+                <button type="button" class="btn btn-sm btn-danger mx-4"
+                    onclick="removeLocalGroup(this); convertToJSON();" style="border-radius: 6px;">X</button>
+            </div>
+        </div>
+        <button type="button" class="btn btn-dark btn-sm" onclick="addLocalGroup(); convertToJSON();">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-plus-circle"
+                viewBox="0 0 16 16">
+                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
+                <path
+                    d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
+            </svg>
+        </button>
+    </div>
+</div>
+<div class="mb-3 row" id="vulnerabilities">
+    <label for="vulnerabilities-options" class="col-sm-2 col-form-label">Vulnerabilities</label>
+    <div class="row-sm-10 text-center">
+        <div id="vulnerabilities-div">
+            <div class="input-group m-3" id="vuln-input-group" hidden>
+                <select class="form-select" aria-label="Vulnerabilities" id="vulnerabilities-options"
+                    onchange="convertToJSON();">
+                    <option value="ad/disable_firewall">ad/disable_firewall</option>
+                    <option value="ad/directory">ad/directory</option>
+                    <option value="ad/files">ad/files</option>
+                    <option value="ad/adcs_templates">ad/adcs_templates</option>
+                    <option value="ad/scripts/asrep_roasting">ad/scripts/asrep_roasting</option>
+                    <option value="ad/scripts/constrained_delegation_use_any">ad/scripts/constrained_delegation_use_any
+                    </option>
+                    <option value="ad/scripts/constrained_delegation_kerb_only">
+                        ad/scripts/constrained_delegation_kerb_only</option>
+                    <option value="ad/scripts/ntlm_relay">ad/scripts/ntlm_relay</option>
+                    <option value="ad/scripts/responder">ad/scripts/responder</option>
+                    <option value="ad/scripts/gpo_abuse">ad/scripts/gpo_abuse</option>
+                    <option value="ad/scripts/rdp_scheduler">ad/scripts/rdp_scheduler</option>
+                    <option value="ad/disable_firewall">ad/disable_firewall</option>
+                    <option value="ad/credentials">ad/credentials</option>
+                    <option value="ad/autologon">ad/autologon</option>
+                    <option value="ad/ntlmdowngrade">ad/ntlmdowngrade</option>
+                    <option value="ad/enable_llmnr">ad/enable_llmnr</option>
+                    <option value="ad/enable_nbt-ns">ad/enable_nbt-ns</option>
+                    <option value="ad/openshares">ad/openshares</option>
+                    <option value="ad/permissions">ad/permissions</option>
+                </select>
+                <button class="btn btn-primary rounded-button mx-5" type="button" id="button-args2"
+                    onclick="createModal('vulnerabilities', this);">...</button>
+                <button type="button" class="btn btn-sm btn-danger m-auto"
+                    onclick="removeVulnerability(this); convertToJSON();" style="border-radius: 6px;">X</button>
+            </div>
+        </div>
+        <button type="button" class="btn btn-dark btn-sm" onclick="addVulnerability(); convertToJSON();">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-plus-circle"
+                viewBox="0 0 16 16">
+                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
+                <path
+                    d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
+            </svg>
+        </button>
+    </div>
+</div>
+<div class="mb-3 row" id="services">
+    <label for="services-options" class="col-sm-2 col-form-label">Services</label>
+    <div class="row-sm-10 text-center">
+        <div id="services-div">
+            <div class="input-group m-3" id="services-input-group" hidden>
+                <select class="form-select" aria-label="Services" id="services-options" onchange="convertToJSON();">
+                    <option value="adcs">adcs</option>
+                    <option value="defender_on">defender_on</option>
+                    <option value="defender_off">defender_off</option>
+                    <option value="no_update">no_update</option>
+                    <option value="update">update</option>
+                    <option value="iis">iis</option>
+                    <option value="webdav">webdav</option>
+                </select>
+                <button class="btn btn-primary rounded-button mx-5" type="button" id="button-args2"
+                    onclick="createModal('services', this);">...</button>
+                <button type="button" class="btn btn-sm btn-danger m-auto"
+                    onclick="removeService(this); convertToJSON();" style="border-radius: 6px;">X</button>
+            </div>
+        </div>
+        <button type="button" class="btn btn-dark btn-sm" onclick="addService(); convertToJSON();">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-plus-circle"
+                viewBox="0 0 16 16">
+                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
+                <path
+                    d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
+            </svg>
+        </button>
+    </div>
+</div>
+<div class="mb-3 row" id="plugins">
+    <label class="col-sm-2 col-form-label">Plugins</label>
+    <div class="row-sm-10 text-center">
+        <div id="plugins-div">
+            <div class="input-group m-3" id="plugins-input-group" hidden>
+                <select class="form-select" aria-label="Plugins" id="plugins-options" onchange="convertToJSON();">
+                    <option value="flag">flag</option>
+                </select>
+                <button class="btn btn-primary rounded-button mx-5" type="button" id="button-args2"
+                    onclick="createModal('plugins', this);">...</button>
+                <button type="button" class="btn btn-sm btn-danger m-auto"
+                    onclick="removePlugin(this); convertToJSON();" style="border-radius: 6px;">X</button>
+            </div>
+        </div>
+        <button type="button" class="btn btn-dark btn-sm" onclick="addPlugin(); convertToJSON();">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-plus-circle"
+                viewBox="0 0 16 16">
+                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
+                <path
+                    d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
+            </svg>
+        </button>
+    </div>
+</div>
+
+<script>
+    let local_group_count = 0;
+    let vulnerability_count = 0;
+    let service_count = 0;
+    let plugin_count = 0;
+
+    function addLocalGroup() {
+        local_group_count += 1;
+        addMultipleInput("local_groups-input-group", "local_groups", local_group_count);
+    }
+
+    function removeLocalGroup(element) {
+        element.parentElement.remove();
+        local_group_count -= 1;
+    }
+
+    function addVulnerability() {
+        vulnerability_count += 1;
+        addDropdownWithModal("vuln-input-group", "vulnerabilities", vulnerability_count);
+    }
+
+    function removeVulnerability(element) {
+        element.parentElement.remove();
+        vulnerability_count -= 1;
+    }
+
+    function addService() {
+        service_count += 1;
+        addDropdownWithModal("services-input-group", "services", service_count);
+    }
+
+    function removeService(element) {
+        element.parentElement.remove();
+        service_count -= 1;
+    }
+
+    function addPlugin() {
+        plugin_count += 1;
+        addDropdownWithModal("plugins-input-group", "plugins", plugin_count);
+    }
+
+    function removePlugin(element) {
+        element.parentElement.remove();
+        plugin_count -= 1;
+    }
+</script>

@@ -1,0 +1,5 @@
+projects/
+.DS_Store
+core/Pipfile.lock
+core/test.ipynb
+*.pyc

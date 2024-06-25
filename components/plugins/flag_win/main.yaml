@@ -1,0 +1,10 @@
+- name: Ensure dest directory exists
+  ansible.windows.win_file:
+    path: "/flag.txt"
+    state: directory
+
+- name: create a flag file given a path and who can access it
+  community.windows.win_lineinfile:
+    path: "/flag.txt"
+    line: "flag{This_is_a_testing_flag}"
+    create: yes

@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% if import_scenario %}
+<p class="text-center fw-bold fs-3 text-decoration-underline p-4"> Import Existing Scenario </p>
+{% else %}
+<p class="text-center fw-bold fs-3 text-decoration-underline p-4"> Create and Run Scenario </p>
+{% endif %}
+
+<div class="row container-fluid text-center mt-5 mx-auto">
+    <div class="container bg-dark">
+        <div class="list-group list-group-flush pb-5" role="tablist">
+            <a class="list-group-item text-bg-dark">
+                List of Scenarios
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    document.addEventListener("DOMContentLoaded", async function () {
+        await readLocalScenarios();
+    });
+
+    async function selectScenario(element) {
+        element.classList.add('active');
+        selected_scenario_name = element.textContent;
+        await readScenario(selected_scenario_name);
+        window.location.href = '/import/design';
+    }
+
+    async function readLocalScenarios() {
+        let scenario_list = await fetch(`http://127.0.0.1:5000/api`, { 
+            method: "POST", 
+            body: JSON.stringify({
+                option: 'scenario-list',
+            }), 
+            headers: { "Content-type": "application/json; charset=UTF-8" }
+        }).then((response) => response.json());
+        scenario_list = scenario_list["return"];
+        const listGroup = document.querySelector(".list-group");
+        for (let i = 0; i < scenario_list.length; i++) {
+            let scenario = scenario_list[i];
+            let scenarioElement = document.createElement("a");
+            scenarioElement.classList.add("list-group-item", "list-group-item-action");
+            scenarioElement.setAttribute("data-bs-toggle", "list");
+            scenarioElement.setAttribute("role", "tab");
+            scenarioElement.setAttribute("onclick", "selectScenario(this)");
+            scenarioElement.textContent = scenario;
+            listGroup.appendChild(scenarioElement);
+        }
+    }
+
+    async function readScenario(scenario_name) {
+        scenarioObject = await fetch(`http://127.0.0.1:5000/api`, { 
+            method: "POST", 
+            body: JSON.stringify({
+                option: 'file-to-json',
+                scenarioName: scenario_name
+            }), 
+            headers: { "Content-type": "application/json; charset=UTF-8" }
+        }).then((response) => response.json());
+        scenarioObject = scenarioObject["return"];
+        window.localStorage.setItem("scenarioObject", JSON.stringify(scenarioObject));
+    }
+</script>
+
+{% endblock %}

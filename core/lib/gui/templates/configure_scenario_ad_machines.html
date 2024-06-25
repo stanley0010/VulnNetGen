@@ -1,0 +1,462 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% if import_scenario %}
+<p class="text-center fw-bold fs-3 text-decoration-underline p-4"> Import Existing Scenario </p>
+{% else %}
+<p class="text-center fw-bold fs-3 text-decoration-underline p-4"> Create and Run Scenario </p>
+{% endif %}
+
+{% with progress=75 %}
+{% include 'components/progress_bar.html'%}
+{% endwith %}
+
+<div class="row container-fluid text-center mt-5 mx-auto">
+    <div class="col-2 container bg-dark mx-4">
+        <div class="list-group list-group-flush pb-5">
+            <a class="list-group-item text-bg-dark">
+                List of Machines
+            </a>
+        </div>
+        <script>
+            function resetElements() {
+                // Get all elements with "active" class
+                var elements = document.getElementsByClassName("list-group-item-action active");
+
+                // Loop over Elements to remove active class;
+                for (var i = 0; i < elements.length; i++) {
+                    elements[i].classList.remove('active')
+                }
+            }
+
+            async function notify(element) {
+                await resetElements();
+                element.classList.add('active');
+                // selected_machine_id = element.id;
+                await readSystemDataFromStorage();
+            }
+        </script>
+    </div>
+    <div class="col container bg-dark p-5 mx-4 text-start">
+        {% include 'components/ad_machine_configure.html' %}
+    </div>
+</div>
+{% with back_URL='/configure-ad-domains', next_URL='/deploy' %}
+{% include 'components/bottom_navbar.html'%}
+{% endwith %}
+
+<script>
+    let scenarioObject = {};
+    let selected_machine_id = "";
+    let system_count = 0;
+    let systems = {};
+    let system = {};
+    let argument_count = 0;
+
+    document.addEventListener("DOMContentLoaded", async function () {
+        if (window.localStorage.getItem("scenarioObject") !== null) {
+            scenarioObject = JSON.parse(window.localStorage.getItem("scenarioObject"));
+        }
+        await changeSystemDataInLocalStorage();
+        await readListOfSystemsFromStorage();
+        document.getElementById('system_1').classList.add('active');
+        await readSystemDataFromStorage();
+    });
+
+    function readSystemDataFromStorage() {
+        if (window.localStorage.getItem("scenarioObject") !== null) {
+            let selected_system_name = document.getElementsByClassName("list-group-item-action active")[0].innerHTML;
+            window['selected_system_name'] = selected_system_name;
+            if (!scenarioObject.hasOwnProperty("systems")) {
+                return;
+            }
+            let system_name_index = getIndexByHostname(selected_system_name, scenarioObject["systems"]);
+            let system_data = scenarioObject["systems"][system_name_index];
+            system = system_data;
+
+            document.getElementById("hostname-input").value = system_data.hostname || "";
+            //TODO: should ban using same hostname!
+            document.getElementById("ip-input").value = system_data.ip || "";
+            document.getElementById("type-options").value = system_data.type || "";
+            if (system_data.type === "dc") {
+                document.getElementById("dc_type").hidden = false;
+            } else {
+                document.getElementById("dc_type").hidden = true;
+                document.getElementById("dc_type").querySelector("select").value = '';
+            }
+            document.getElementById("dc_type-options").value = system_data.dc_type || "";
+            document.getElementById("dns_domain-input").value = system_data.dns_domain || "";
+            document.getElementById("local_admin_password-input").value = system_data.local_admin_password || "";
+            document.getElementById("domain-input").value = system_data.domain || "";
+            document.getElementById("path-input").value = system_data.path || "";
+
+            let localGroup_object = scenarioObject["systems"][system_name_index]?.local_groups;
+            fillLocalGroupsInputGroup(system_name_index, selected_system_name, "local_groups", localGroup_object, addLocalGroup);
+            let vulnerabilities_object = scenarioObject["systems"][system_name_index]?.vulnerabilities;
+            fillSelectInputGroup(system_name_index, selected_system_name, "vulnerabilities", vulnerabilities_object, addVulnerability);
+            let services_object = scenarioObject["systems"][system_name_index]?.services;
+            fillSelectInputGroup(system_name_index, selected_system_name, "services", services_object, addService);
+            let plugins_object = scenarioObject["systems"][system_name_index]?.plugins;
+            fillSelectInputGroup(system_name_index, selected_system_name, "plugins", plugins_object, addPlugin);
+        }
+    }
+
+    function updateDCType(element) {
+        if (element.options[element.selectedIndex].value === "dc") {
+            document.getElementById("dc_type").hidden = false;
+        } else {
+            document.getElementById("dc_type").hidden = true;
+            document.getElementById("dc_type").querySelector("select").value = '';
+        }
+    }
+
+    function fillSelectInputGroup(domain_name_index, selected_domain_name, inputType, propertyObjects, addFunction) {
+        let input_current_count = document.querySelectorAll('[id^=' + inputType + '-input-group-]').length;
+        let input_data = propertyObjects;
+
+        // remove all existing input groups
+        let inputDiv = document.getElementById(inputType + '-div');
+        let inputGroups = inputDiv.querySelectorAll("div:not([hidden])");
+        for (let i = 0; i < inputGroups.length; i++) {
+            inputGroups[i].remove();
+        }
+
+        if (input_data !== undefined) {
+            let input_count = Object.keys(input_data).length;
+
+            // add new input groups
+            for (let i = 0; i < input_count; i++) {
+                addFunction();
+            }
+
+            // put input values from scenarioObject into all input groups
+            inputDiv = document.getElementById(inputType + '-div');
+            inputGroups = inputDiv.querySelectorAll("div:not([hidden])");
+            for (let i = 0; i < input_count; i++) {
+                const selectInput = inputGroups[i].querySelector("select:nth-child(1)");
+                selectInput.value = propertyObjects[i + 1]["name"];
+            }
+        }
+    }
+
+    function fillLocalGroupsInputGroup(domain_name_index, selected_domain_name, inputType, propertyObjects, addFunction) {
+        let input_current_count = document.querySelectorAll('[id^=' + inputType + '-input-group-]').length;
+        let input_data = propertyObjects;
+
+        // remove all existing input groups
+        let inputDiv = document.getElementById(inputType + '-div');
+        let inputGroups = inputDiv.querySelectorAll("div:not([hidden])");
+        for (let i = 0; i < inputGroups.length; i++) {
+            inputGroups[i].remove();
+        }
+
+        if (input_data !== undefined) {
+            let input_count = Object.keys(input_data).length;
+
+            // add new input groups
+            for (let i = 0; i < input_count; i++) {
+                addFunction();
+            }
+
+            // put input values from scenarioObject into all input groups
+            inputDiv = document.getElementById(inputType + '-div');
+            inputGroups = inputDiv.querySelectorAll("div:not([hidden])");
+            for (let i = 0; i < input_count; i++) {
+                const inputNameInput = inputGroups[i].querySelector("input:nth-child(1)");
+                const inputUserNameInput = inputGroups[i].querySelector("input:nth-child(2)");
+                inputNameInput.value = propertyObjects[i + 1]["group_name"];
+                inputUserNameInput.value = propertyObjects[i + 1]["user"];
+            }
+        }
+    }
+
+    function updateListOfMachines(element) {
+        // handle hostname update in List of Machines
+        let machines = document.getElementsByClassName("list-group")[0].getElementsByClassName("list-group-item-action");
+        const oldValue = element.oldValue;
+        const currentValue = element.value;
+        for (let machine of machines) {
+            console.log(machine);
+            if (machine.innerHTML === oldValue) {
+                machine.innerHTML = currentValue;
+                break;
+            }
+        }
+    }
+
+    // helper function for vulnerabilities object in scenarioObject
+    function getIndexBySelectName(name, object) {
+        let names = Object.values(object).map((x) => x.name);
+        if (names.indexOf(name) === -1) {
+            return -1; // not found
+        }
+        return names.indexOf(name) + 1;
+    }
+
+    // helper function for systems object structure in scenarioObject
+    function getIndexByHostname(hostname, object) {
+        if (getHostnames(object).indexOf(hostname) === -1) {
+            return -1; // not found
+        }
+        return getHostnames(object).indexOf(hostname) + 1;
+    }
+
+    // helper function for systems object structure in scenarioObject
+    function getHostnames(dict_obj) {
+        return Object.values(dict_obj).map((x) => x.hostname); // return an array of keys
+    }
+
+    function readListOfSystemsFromStorage() {
+        if (window.localStorage.getItem("scenarioObject") !== null) {
+            for (let i = 0; i < Object.keys(scenarioObject["systems"]).length; i++) {
+                let current_id = "system_" + (system_count + 1);
+                let list_group = document.getElementsByClassName("list-group")[0];
+                const a = document.createElement("a");
+                a.setAttribute("id", current_id);
+                a.setAttribute("onclick", "notify(this)");
+                a.setAttribute("class", "list-group-item list-group-item-action");
+                a.innerHTML = scenarioObject["systems"][i + 1]["hostname"];
+                list_group.childNodes[1].appendChild(a);
+                system_count += 1;
+            }
+        }
+    }
+
+    function changeSystemDataInLocalStorage() {
+        if ("systems" in scenarioObject === false) {
+            // get all keys in scenarioObject that starts with "machine_"
+            let keys = Object.keys(scenarioObject).filter(key => key.startsWith("machine_"));
+
+            scenarioObject["systems"] = {};
+            for (let i = 0; i < keys.length; i++) {
+                scenarioObject["systems"][i + 1] = { hostname: scenarioObject[keys[i]]["machine_name"], ip: scenarioObject[keys[i]]["ip_address"] };
+                delete scenarioObject[keys[i]]; //TODO not tested yet
+            }
+            saveScenario();
+        }
+    }
+
+    function saveScenario() {
+        window.localStorage.setItem("scenarioObject", JSON.stringify(scenarioObject));
+    }
+
+    function createModal(type, element) {
+        // type: vulnerabilities, services, plugins
+        const myModal = new bootstrap.Modal('#vuln-modal');
+        const DOMModal = document.getElementById('vuln-modal');
+        const modalTitle = DOMModal.querySelector('.modal-title');
+        const inputElement = element.closest('.input-group').querySelector('select');
+        let inputValue = inputElement.value;
+        modalTitle.textContent = `${type} argument(s) of ${inputValue}`;
+        if (inputValue) {
+            getArgumentsToModal(type, inputValue);
+            myModal.show();
+        }
+    }
+
+    function getArgumentsToModal(type, name) {
+        let selected_system_index = getIndexByHostname(window['selected_system_name'], scenarioObject["systems"]);
+        let type_object = scenarioObject["systems"][selected_system_index][type]
+        let args_json = type_object[getIndexBySelectName(name, type_object)]["args"];
+        var textareaElement = document.getElementById('argument-name');
+        textareaElement.value = JSON.stringify(args_json, undefined, 4);
+    }
+
+    function isArgumentsValid(element) {
+        var errorText = element.parentNode.querySelector('.invalid-feedback');
+        var ugly = document.getElementById('argument-name').value;
+        try {
+            var obj = JSON.parse(ugly);
+            element.classList.remove('is-invalid');
+            errorText.style.display = 'none';
+            prettyPrint();
+            return true;
+        } catch (e) {
+            element.classList.add('is-invalid');
+            errorText.style.display = 'block';
+            return false;
+        }
+    }
+
+    function prettyPrint() {
+        var ugly = document.getElementById('argument-name').value;
+        try {
+            var obj = JSON.parse(ugly);
+        } catch (e) {
+            return console.error(e); // error in the above string (in this case, yes)!
+        }
+        var pretty = JSON.stringify(obj, undefined, 4);
+        document.getElementById('argument-name').value = pretty;
+    }
+
+    function updateArgumentValue(element) {
+        let argumentsObject = JSON.parse(document.getElementById('argument-name').value);
+        let re = /(.*) argument\(s\) of (.*)/g;
+        let matches = re.exec(document.getElementById(`vuln-modal`).querySelector('.modal-title').textContent);
+        let type = matches[1];
+        let name = matches[2];
+        let selected_system_index = getIndexByHostname(window['selected_system_name'], scenarioObject["systems"]);
+        let object = scenarioObject["systems"][selected_system_index][type];
+        object[getIndexBySelectName(name, object)]["args"] = argumentsObject;
+        window.localStorage.setItem("scenarioObject", JSON.stringify(scenarioObject))
+    }
+
+    function addMultipleInput(parentId, property, count) {
+        let parent = document.getElementById(parentId);
+        let clone = parent.cloneNode(true);
+        let currentId = parentId + "-" + count;
+        clone.id = currentId;
+        clone.hidden = false;
+        parent.parentNode.appendChild(clone);
+
+        // fix duplicate form field id when adding new field
+        let selectElement = clone.querySelector("input");
+        selectElement.id = property + "-options-" + count;
+    }
+
+    function addDropdownWithModal(parentId, property, count) {
+        let parent = document.getElementById(parentId);
+        let clone = parent.cloneNode(true);
+        let currentId = parentId + "-" + count;
+        clone.id = currentId;
+        clone.hidden = false;
+        parent.parentNode.appendChild(clone);
+
+        // fix duplicate form field id when adding new field
+        let selectElement = clone.querySelector("select");
+        selectElement.id = property + "-input-" + count;
+    }
+
+    function convertToJSON() {
+        let selected_system = document.getElementsByClassName("list-group-item-action active")[0].innerHTML;
+        let selected_system_index = getIndexByHostname(selected_system, scenarioObject["systems"]);
+
+        // Get hostname
+        system.hostname = document.getElementById("hostname").querySelector("input").value;
+
+        // Get IP
+        system.ip = document.getElementById("ip").querySelector("input").value;
+
+        // Get type
+        system.type = document.getElementById("type").querySelector("select").value;
+
+        // Get DC type
+        system.dc_type = document.getElementById("dc_type").querySelector("select").value;
+
+        // Get DNS domain
+        system.dns_domain = document.getElementById("dns_domain").querySelector("input").value;
+
+        // Get local admin password
+        system.local_admin_password = document.getElementById("local_admin_password").querySelector("input").value;
+
+        // Get domain
+        system.domain = document.getElementById("domain").querySelector("input").value;
+
+        // Get path
+        system.path = document.getElementById("path").querySelector("input").value;
+
+        // Get local groups
+        let localGroups = {};
+        const localGroupsDiv = document.getElementById("local_groups-div");
+        const localGroupsInputGroups = localGroupsDiv.querySelectorAll("div:not([hidden])"); // select all non-hidden div elements
+        const localGroupsArray = [];
+        for (let i = 0; i < localGroupsInputGroups.length; i++) {
+            const groupNameInput = localGroupsInputGroups[i].querySelector("input:nth-child(1)");
+            const userInput = localGroupsInputGroups[i].querySelector("input:nth-child(2)");
+            const groupName = groupNameInput.value;
+            const user = userInput.value;
+            if (groupName !== "" && user !== "") { // skip empty values
+                localGroupsArray.push({ group_name: groupName, user: user });
+            }
+        }
+        for (let i = 0; i < localGroupsArray.length; i++) {
+            localGroups[i + 1] = localGroupsArray[i];
+        }
+        system.local_groups = localGroups;
+
+        // Get vulnerabilities
+        let vulnerabilities = {};
+        const vulnerabilitiesDiv = document.getElementById("vulnerabilities-div");
+        const vulnerabilitiesInputGroups = vulnerabilitiesDiv.children;
+        const vulnerabilitiesArray = [];
+        const vulnerabilitiesObject = scenarioObject["systems"][selected_system_index]?.vulnerabilities;
+        for (let i = 0; i < vulnerabilitiesInputGroups.length; i++) {
+            if (!vulnerabilitiesInputGroups[i].hasAttribute("hidden")) {
+                const selectElement = vulnerabilitiesInputGroups[i].querySelector("select");
+                const vulnerabilityName = selectElement.value;
+                if (vulnerabilityName !== "") { // skip empty values
+                    let vulnerabilitiesArguments = vulnerabilitiesObject?.[getIndexBySelectName(vulnerabilityName, vulnerabilitiesObject)]?.args;
+                    if (vulnerabilitiesArguments !== undefined) {
+                        vulnerabilitiesArray.push({ name: vulnerabilityName, args: vulnerabilitiesArguments });
+                    } else {
+                        vulnerabilitiesArray.push({ name: vulnerabilityName, args: {} });
+                    }
+                }
+            }
+        }
+        for (let i = 0; i < vulnerabilitiesArray.length; i++) {
+            vulnerabilities[i + 1] = vulnerabilitiesArray[i];
+        }
+        system.vulnerabilities = vulnerabilities;
+
+        // Get services
+        let services = {};
+        const servicesDiv = document.getElementById("services-div");
+        const servicesInputGroups = servicesDiv.children;
+        const servicesArray = [];
+        const servicesObject = scenarioObject["systems"][selected_system_index]?.services;
+        for (let i = 0; i < servicesInputGroups.length; i++) {
+            if (!servicesInputGroups[i].hasAttribute("hidden")) {
+                const selectElement = servicesInputGroups[i].querySelector("select");
+                const serviceName = selectElement.value;
+                if (serviceName !== "") { // skip empty values
+                    let servicesArguments = servicesObject?.[getIndexBySelectName(serviceName, servicesObject)]?.args;
+                    if (servicesArguments !== undefined) {
+                        servicesArray.push({ name: serviceName, args: servicesArguments });
+                    } else {
+                        servicesArray.push({ name: serviceName, args: {} });
+                    }
+                }
+            }
+        }
+        for (let i = 0; i < servicesArray.length; i++) {
+            services[i + 1] = servicesArray[i];
+        }
+        system.services = services;
+
+        // Get plugins
+        let plugins = {};
+        const pluginsDiv = document.getElementById("plugins-div");
+        const pluginsInputGroups = pluginsDiv.children;
+        const pluginsArray = [];
+        const pluginsObject = scenarioObject["systems"][selected_system_index]?.plugins;
+        for (let i = 0; i < pluginsInputGroups.length; i++) {
+            if (!pluginsInputGroups[i].hasAttribute("hidden")) {
+                const selectElement = pluginsInputGroups[i].querySelector("select");
+                const pluginName = selectElement.value;
+                if (pluginName !== "") { // skip empty values
+                    let pluginsArguments = pluginsObject?.[getIndexBySelectName(pluginName, pluginsObject)]?.args;
+                    if (pluginsArguments !== undefined) {
+                        pluginsArray.push({ name: pluginName, args: pluginsArguments });
+                    } else {
+                        pluginsArray.push({ name: pluginName, args: {} });
+                    }
+                }
+            }
+        }
+        for (let i = 0; i < pluginsArray.length; i++) {
+            plugins[i + 1] = pluginsArray[i];
+        }
+        system.plugins = plugins;
+
+        // systems["1"] = system; //TODO: fix the hard coded value
+
+        // const jsonData = { systems: systems };
+        // console.log(JSON.stringify(jsonData, null, 2));
+        scenarioObject["systems"][selected_system_index] = system;
+
+        window.localStorage.setItem("scenarioObject", JSON.stringify(scenarioObject));
+    }
+</script>
+{% endblock %}

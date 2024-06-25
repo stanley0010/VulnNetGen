@@ -1,0 +1,38 @@
+<form>
+    <div class="row row-cols-4 align-items-start">
+        <div class="grid gap-2" id="machine">
+            <div class="row">
+                <div class="col">
+                    <div class="p-1 g-col-6">
+                        <img src="{{ url_for('static', filename='images/vm.png') }}" alt="VM" width="100"
+                            height="100" />
+                    </div>
+                </div>
+                <div class="col-2">
+                    <button type="button" class="btn btn-sm btn-danger"
+                        onclick="this.parentElement.parentElement.parentElement.remove(); removeMachine()">X</button>
+                </div>
+            </div>
+            <div class=" p-1 g-col-6">
+                <div class="input-group input-group-sm mb-3 has-validation">
+                    <input type="text" id="machine_name" class="form-control" placeholder="Machine name"
+                        aria-label="Machine name" onblur="updateMachineName(this); validateMachineName(this);"
+                        aria-describedby="inputGroup-sizing-sm" pattern="" required />
+                    <div id="errorText" class="invalid-feedback" style="text-align: right;">Please
+                        provide a machine name.
+                    </div>
+
+                </div>
+            </div>
+            <div class="p-1 g-col-6">
+                <div class="input-group input-group-sm mb-3 has-validation">
+                    <input type="text" id="ipInput" class="form-control" placeholder="IP Address"
+                        aria-label="IP Address" onblur="updateMachineIP(this); validateIP(this);"
+                        aria-describedby="inputGroup-sizing-sm" required />
+                    <div id="errorText" class="invalid-feedback" style="text-align: right;">Invalid IP
+                        address.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>

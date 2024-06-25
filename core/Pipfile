@@ -1,0 +1,21 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+python-vagrant = "*"
+python-terraform = "*"
+pyyaml = "*"
+passlib = "*"
+click = "*"
+prettytable = "*"
+flask = "*"
+flask-socketio = "*"
+colorama = "*"
+ansible-runner = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.10"

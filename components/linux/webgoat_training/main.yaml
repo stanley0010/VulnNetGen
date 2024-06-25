@@ -1,0 +1,28 @@
+---
+- hosts: $hostname
+  become: true
+  become_user: root
+  
+  tasks:
+    - name: apt install openjdk-17-jdk openjdk-17-jre
+      apt:
+        pkg:
+          - openjdk-17-jdk
+          - openjdk-17-jre
+        state: present
+        update_cache: yes
+    
+    - name: Download webgoat-2023.8.jar
+      get_url:
+        url: https://github.com/WebGoat/WebGoat/releases/download/v2023.8/webgoat-2023.8.jar
+        dest: /
+    
+    - name: export TZ=Asia/Hong_Kong
+      shell:
+        cmd: export TZ=Asia/Hong_Kong
+        chdir: /
+
+    - name: run webgoat
+      shell:
+        cmd: java -Dfile.encoding=UTF-8 -jar webgoat-2023.8.jar --server.address=0.0.0.0 &
+        chdir: /

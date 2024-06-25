@@ -1,0 +1,46 @@
+{% if back_URL != '' %}
+<div class="col container d-flex justify-content-between my-4">
+{% else %}
+<div class="col container d-flex justify-content-end my-4">
+{% endif %}
+    {% if import_scenario %}
+    {% if back_URL != '' %}
+    <button type="button" class="btn btn-primary px-3 mx-2" id="back" onclick="redirectIfValidated('/import{{ back_URL }}')">
+        Back
+    </button>
+    {% endif %}
+    <div>
+        <button type="button" class="btn btn-success px-3 mx-2" id="save" onclick="saveScenarioFile()">
+            Save
+        </button>
+        <button type="button" class="btn btn-primary px-3 mx-2" id="next"
+            onclick="redirectIfValidated('/import{{ next_URL }}')">
+            Next
+        </button>
+    </div>
+    {% else %}
+    {% if back_URL != '' %}
+    <button type="button" class="btn btn-primary px-3 mx-2" id="back" onclick="redirectIfValidated('/create{{ back_URL }}')">
+        Back
+    </button>
+    {% endif %}
+    <div>
+        <button type="button" class="btn btn-primary px-3 mx-2" id="next"
+            onclick="redirectIfValidated('/create{{ next_URL }}')">
+            Next
+        </button>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    function redirectIfValidated(url) {
+        const errorTexts = document.querySelectorAll("#errorText");
+        const errorExist = Array.from(errorTexts).some(el => el.style.display === "block");
+
+        if (!errorExist) {
+            window.location.href = url;
+            return;
+        }
+    }
+</script>

@@ -1,0 +1,26 @@
+---
+- hosts: $hostname
+  become: true
+  become_user: root
+  
+  tasks:
+    - name: apt install apache2
+      apt:
+        name: apache2
+        state: present
+        update_cache: yes
+
+    - name: download installer
+      get_url:
+        url: https://cdn.lucee.org/lucee-5.3.6.061-pl0-linux-x64-installer.run
+        dest: /
+      
+    - name: Change isntaller to be executable
+      file:
+        path: /lucee-5.3.6.061-pl0-linux-x64-installer.run
+        mode: +x
+    
+    - name: run installer
+      shell:
+        cmd: sudo ./lucee-5.3.6.061-pl0-linux-x64-installer.run --mode unattended --luceepass "vulnNetGen"
+        chdir: /

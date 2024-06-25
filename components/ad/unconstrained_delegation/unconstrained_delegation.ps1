@@ -1,0 +1,1 @@
+Get-ADComputer -Identity "$machine_name" | Set-ADAccountControl -TrustedForDelegation $true

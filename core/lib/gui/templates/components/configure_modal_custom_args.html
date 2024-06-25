@@ -1,0 +1,26 @@
+<form class="needs-validation">
+    <div class="modal fade" id="vuln-modal" tabindex="-1" aria-labelledby="vuln-modal" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content bg-dark">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="exampleModalCenteredScrollableTitle">Modal title</h1>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3 row" id="argument">
+                        <div class="col">
+                            <textarea class="form-control" id="argument-name"
+                                placeholder="Type your Arguments in JSON format"
+                                onblur="if (isArgumentsValid(this)) {updateArgumentValue(this);}" rows="10"></textarea>
+                            <div id="errorText" class="invalid-feedback">
+                                Invalid JSON format
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class=" modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>

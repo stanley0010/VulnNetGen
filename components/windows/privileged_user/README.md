@@ -1,0 +1,1 @@
+Note that Windows have a minimum password policy requirement (tested on Windows Server 2022). 

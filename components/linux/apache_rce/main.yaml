@@ -1,0 +1,52 @@
+---
+- hosts: $hostname
+  become: true
+  become_user: root
+  
+  tasks:
+    - name: apt install libapr1-dev libaprutil1-dev libpcre3-dev gcc git make
+      apt:
+        pkg:
+          - libapr1-dev
+          - libaprutil1-dev
+          - libpcre3-dev
+          - gcc
+          - git
+          - make
+        state: present
+        update_cache: yes
+
+    - name: Download httpd-2.4.49.tar.gz
+      get_url:
+        url: https://archive.apache.org/dist/httpd/httpd-2.4.49.tar.gz
+        dest: /
+    
+    - name: tar -xf httpd-2.4.49.tar.gz
+      shell:
+        cmd: tar -xf httpd-2.4.49.tar.gz
+        chdir: /
+      
+    - name: run ./configure
+      shell:
+        cmd: ./configure --prefix=/usr/local/apache2
+        chdir: /httpd-2.4.49
+    
+    - name: make && make install
+      shell:
+        cmd: make && make install
+        chdir: /httpd-2.4.49
+    
+    - name: Make the httpd to be vulnerable
+      shell:
+        cmd: sed -i 's/denied/granted/' /usr/local/apache2/conf/httpd.conf
+        chdir: /
+    
+    - name: Resolve AH00558
+      shell:
+        cmd: echo 'ServerName 127.0.0.1' >> /usr/local/apache2/conf/httpd.conf
+        chdir: /
+
+    - name: run apachectl
+      shell:
+        cmd: sudo /usr/local/apache2/bin/apachectl start
+        chdir: /

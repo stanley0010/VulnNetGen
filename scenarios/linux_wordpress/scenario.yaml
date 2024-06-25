@@ -1,0 +1,36 @@
+---
+name: Linux wordpress
+description: vulnerable wordpress with weak admin password
+author: RIC1
+difficulty: easy
+systems:
+  - name: wordpress
+    base: ubuntu22
+    ip: 192.168.77.8
+    accounts:
+      - name: root
+        password: root_user_password
+        privileged: true
+      - name: www-data
+        password: regular_user_password
+        privileged: false
+    vulnerabilities:
+      - name: "linux/wordpress_weak_admin_password"
+        args:
+          mysql_root_password: "vulnNetGen_root_839381"
+          mysql_db: "wordpress"
+          mysql_user: "sammy"
+          mysql_password: "an_easy_Passw0rd"
+          wordpress_url: 192.168.77.8
+          wordpress_admin_user: "admin"
+          wordpress_admin_password: "admin"
+          wordpress_admin_email: "admin@petpetgo.com"
+          copy_files: true
+    plugins:
+      - name: flag
+        args:
+          flag: flag{linux_wordpress_weak_admin_password}
+          path: /flag.txt
+          owner: root
+          group: root
+          mode: 0700

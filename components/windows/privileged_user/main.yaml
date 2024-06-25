@@ -1,0 +1,27 @@
+---
+- hosts: $hostname
+
+  tasks:
+    - name: Set minimum password length to 0
+      community.windows.win_security_policy:
+        section: System Access
+        key: MinimumPasswordLength
+        value: 0
+
+    - name: Disable password complexity requirements
+      community.windows.win_security_policy:
+        section: System Access
+        key: PasswordComplexity
+        value: 0
+
+    - name: Ensure the policy is applied
+      ansible.windows.win_command:
+        cmd: gpupdate /force
+        
+    - name: Add privileged user
+      ansible.windows.win_user:
+        name: vulnUser
+        password: $password
+        state: present
+        groups:
+          Administrators

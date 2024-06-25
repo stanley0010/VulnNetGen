@@ -1,0 +1,23 @@
+---
+#System Settings
+php_modules:
+  [
+    "php-curl",
+    "php-gd",
+    "php-mbstring",
+    "php-xml",
+    "php-xmlrpc",
+    "php-soap",
+    "php-intl",
+    "php-zip",
+  ]
+
+#MySQL Settings
+
+
+#HTTP Settings
+http_host: "petpetgo.com"
+http_conf: "petpetgo.conf"
+http_port: "80"
+
+

@@ -1,0 +1,501 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% if import_scenario %}
+<p class="text-center fw-bold fs-3 text-decoration-underline p-4"> Import Existing Scenario </p>
+{% else %}
+<p class="text-center fw-bold fs-3 text-decoration-underline p-4"> Create and Run Scenario </p>
+{% endif %}
+
+{% with progress=50 %}
+{% include 'components/progress_bar.html'%}
+{% endwith %}
+
+<div class="row container-fluid text-center mt-5 mx-auto">
+    <div class="col-2 container bg-dark mx-4">
+        <div class="list-group list-group-flush pb-5 text-break">
+            <a class="list-group-item text-bg-dark">
+                List of Domains
+            </a>
+        </div>
+        <script>
+            function resetElements() {
+                // Get all elements with "active" class
+                var elements = document.getElementsByClassName("list-group-item-action active");
+
+                // Loop over Elements to remove active class;
+                for (var i = 0; i < elements.length; i++) {
+                    elements[i].classList.remove('active')
+                }
+            }
+
+            async function notify(element) {
+                await resetElements();
+                element.classList.add('active');
+                await readDomainDataFromStorage();
+                // getKeys(scenarioObject["domains"]);
+            }
+        </script>
+    </div>
+    <div class="col container bg-dark p-5 mx-4 text-start">
+        {% include 'components/ad_domain_configure.html' %}
+    </div>
+</div>
+{% with back_URL='/design', next_URL='/configure-ad-machines' %}
+{% include 'components/bottom_navbar.html'%}
+{% endwith %}
+<script>
+    let scenarioObject = {};
+    let domain = {};
+    let domain_count = 0;
+    let argument_count = 0;
+
+
+    document.addEventListener("DOMContentLoaded", async function () {
+        await readListOfDomainsFromStorage();
+        document.getElementById('domain_1').classList.add('active');
+        await readDomainDataFromStorage();
+    });
+
+    function readListOfDomainsFromStorage() {
+        if (window.localStorage.getItem("scenarioObject") !== null) {
+            scenarioObject = JSON.parse(window.localStorage.getItem("scenarioObject"));
+            for (let i = 0; i < Object.keys(scenarioObject["domains"]).length; i++) {
+                let current_id = "domain_" + (domain_count + 1);
+                let list_group = document.getElementsByClassName("list-group")[0];
+                const a = document.createElement("a");
+                a.setAttribute("id", current_id);
+                a.setAttribute("onclick", "notify(this)");
+                a.setAttribute("class", "list-group-item list-group-item-action");
+                a.innerHTML = Object.keys(scenarioObject["domains"][i + 1]);
+                list_group.childNodes[1].appendChild(a);
+                domain_count += 1;
+            }
+        }
+    }
+
+    function readDomainDataFromStorage() {
+        if (window.localStorage.getItem("scenarioObject") !== null) {
+            let selected_domain_name = document.getElementsByClassName("list-group-item-action active")[0].innerHTML;
+            window['selected_domain_name'] = selected_domain_name;
+            if (!scenarioObject.hasOwnProperty("domains")) {
+                return;
+            }
+            let domain_name_index = getIndexByKey(selected_domain_name, scenarioObject["domains"])
+            let domain_data = Object.values(scenarioObject["domains"][domain_name_index])[0];
+            domain = domain_data;
+
+            document.getElementById("dc-input").value = domain_data.dc || "";
+            document.getElementById("domain_password-input").value = domain_data.domain_password || "";
+            document.getElementById("netbios_name-input").value = domain_data.netbios_name || "";
+            document.getElementById("laps_path-input").value = domain_data.laps_path || "";
+
+            let ou_object = scenarioObject["domains"][domain_name_index][selected_domain_name]?.organisation_units;
+            fillOrganisationUnitsInputGroup(domain_name_index, selected_domain_name, "organisation_units", ou_object, addOrganisationUnit);
+            let globalGroup_object = scenarioObject["domains"][domain_name_index][selected_domain_name]?.groups?.global;
+            fillGlobalGroupsInputGroup(domain_name_index, selected_domain_name, "global_groups", globalGroup_object, addGlobalGroup);
+            let domainLocalGroup_object = scenarioObject["domains"][domain_name_index][selected_domain_name]?.groups?.domainlocal;
+            fillDomainLocalGroupsInputGroup(domain_name_index, selected_domain_name, "domain_local_groups", domainLocalGroup_object, addDomainLocalGroup);
+            let acl_object = scenarioObject["domains"][domain_name_index][selected_domain_name]?.acls;
+            fillSingleInputGroup(domain_name_index, selected_domain_name, "acls", acl_object, addAcl);
+            let user_object = scenarioObject["domains"][domain_name_index][selected_domain_name]?.users;
+            fillSingleInputGroup(domain_name_index, selected_domain_name, "users", user_object, addUser);
+        }
+    }
+
+    function fillGlobalGroupsInputGroup(domain_name_index, selected_domain_name, inputType, propertyObjects, addFunction) {
+        let input_current_count = document.querySelectorAll('[id^=' + inputType + '-input-group-]').length;
+        let input_data = propertyObjects;
+        // remove all existing input groups
+        let inputDiv = document.getElementById(inputType + '-div');
+        let inputGroups = inputDiv.querySelectorAll("div:not([hidden])");
+        for (let i = 0; i < inputGroups.length; i++) {
+            inputGroups[i].remove();
+        }
+
+        if (input_data !== undefined) {
+            let input_count = Object.keys(input_data).length;
+
+            // add new input groups
+            for (let i = 0; i < input_count; i++) {
+                addFunction();
+            }
+
+            // put input values from scenarioObject into all input groups
+            inputDiv = document.getElementById(inputType + '-div');
+            inputGroups = inputDiv.querySelectorAll("div:not([hidden])");
+            for (let i = 0; i < input_count; i++) {
+                const nameInput = inputGroups[i].querySelector("input:nth-child(1)");
+                const managedByInput = inputGroups[i].querySelector("input:nth-child(2)");
+                const pathInput = inputGroups[i].querySelector("input:nth-child(3)");
+                nameInput.value = Object.keys(propertyObjects[i + 1])[0] || "";
+                managedByInput.value = Object.values(propertyObjects[i + 1])[0]["managed_by"] || "";
+                pathInput.value = Object.values(propertyObjects[i + 1])[0]["path"] || "";
+            }
+        }
+    }
+
+    function fillOrganisationUnitsInputGroup(domain_name_index, selected_domain_name, inputType, propertyObjects, addFunction) {
+        let input_current_count = document.querySelectorAll('[id^=' + inputType + '-input-group-]').length;
+        let input_data = propertyObjects;
+
+        // remove all existing input groups
+        let inputDiv = document.getElementById(inputType + '-div');
+        let inputGroups = inputDiv.querySelectorAll("div:not([hidden])");
+        for (let i = 0; i < inputGroups.length; i++) {
+            inputGroups[i].remove();
+        }
+
+        if (input_data !== undefined) {
+            let input_count = Object.keys(input_data).length;
+
+            // add new input groups
+            for (let i = 0; i < input_count; i++) {
+                addFunction();
+            }
+
+            // put input values from scenarioObject into all input groups
+            inputDiv = document.getElementById(inputType + '-div');
+            inputGroups = inputDiv.querySelectorAll("div:not([hidden])");
+            for (let i = 0; i < input_count; i++) {
+                const inputNameInput = inputGroups[i].querySelector("input:nth-child(1)");
+                const inputPathInput = inputGroups[i].querySelector("input:nth-child(2)");
+                inputNameInput.value = Object.keys(propertyObjects[i + 1])[0];
+                inputPathInput.value = Object.values(propertyObjects[i + 1])[0]["path"];
+            }
+        }
+    }
+
+    function fillDomainLocalGroupsInputGroup(domain_name_index, selected_domain_name, inputType, propertyObjects, addFunction) {
+        let input_current_count = document.querySelectorAll('[id^=' + inputType + '-input-group-]').length;
+        let input_data = propertyObjects;
+
+        // remove all existing input groups
+        let inputDiv = document.getElementById(inputType + '-div');
+        let inputGroups = inputDiv.querySelectorAll("div:not([hidden])");
+        for (let i = 0; i < inputGroups.length; i++) {
+            inputGroups[i].remove();
+        }
+
+        if (input_data !== undefined) {
+            let input_count = Object.keys(input_data).length;
+
+            // add new input groups
+            for (let i = 0; i < input_count; i++) {
+                addFunction();
+            }
+
+            // put input values from scenarioObject into all input groups
+            inputDiv = document.getElementById(inputType + '-div');
+            inputGroups = inputDiv.querySelectorAll("div:not([hidden])");
+            for (let i = 0; i < input_count; i++) {
+                const inputNameInput = inputGroups[i].querySelector("input:nth-child(1)");
+                const inputPathInput = inputGroups[i].querySelector("input:nth-child(2)");
+                inputNameInput.value = Object.keys(propertyObjects[i + 1])[0];
+                inputPathInput.value = Object.values(propertyObjects[i + 1])[0]["path"];
+            }
+        }
+    }
+
+    function fillSingleInputGroup(domain_name_index, selected_domain_name, inputType, propertyObjects, addFunction) {
+        let input_current_count = document.querySelectorAll('[id^=' + inputType + '-input-group-]').length;
+        let input_data = propertyObjects;
+
+        // remove all existing input groups
+        let inputDiv = document.getElementById(inputType + '-div');
+        let inputGroups = inputDiv.querySelectorAll("div:not([hidden])");
+        for (let i = 0; i < inputGroups.length; i++) {
+            inputGroups[i].remove();
+        }
+
+        if (input_data !== undefined) {
+            let input_count = Object.keys(input_data).length;
+
+            // add new input groups
+            for (let i = 0; i < input_count; i++) {
+                addFunction();
+            }
+
+            // put input values from scenarioObject into all input groups
+            inputDiv = document.getElementById(inputType + '-div');
+            inputGroups = inputDiv.querySelectorAll("div:not([hidden])");
+            for (let i = 0; i < input_count; i++) {
+                const inputNameInput = inputGroups[i].querySelector("input:nth-child(1)");
+                inputNameInput.value = Object.keys(propertyObjects[i + 1])[0];
+            }
+        }
+    }
+
+    // Helper function to get all keys of our scenarioObject
+    function getKeys(dict_obj) {
+        return Object.values(dict_obj).map((x) => Object.keys(x)[0]); // return an array of keys
+    }
+
+    // Helper function to get index of key in JSON object, because we have numbering for each dict object
+    function getIndexByKey(key, dict_obj) {
+        return getKeys(dict_obj).indexOf(key) + 1;
+    }
+
+    function createModal(type, element) {
+        // type: acls, users
+        const myModal = new bootstrap.Modal(`#vuln-modal`);
+        const DOMModal = document.getElementById(`vuln-modal`);
+        const modalTitle = DOMModal.querySelector('.modal-title');
+        const inputElement = element.closest('.input-group').querySelector('input[type="text"]');
+        let inputValue = inputElement.value;
+        modalTitle.textContent = `Argument(s) of ${inputValue}`;
+        if (inputValue) {
+            addArguments(type, inputValue, element);
+            myModal.show();
+        }
+    }
+
+    function addArguments(type, selectedOption, element) {
+        let modal = document.getElementById(`vuln-modal`);
+
+        for (let i = 1; i <= argument_count; i++) {
+            let arg = document.getElementById('argument-' + i);
+            arg.remove();
+        }
+        let old_p = document.getElementsByClassName('modal-body')[0].getElementsByTagName('p');
+        if (old_p.length > 0) {
+            old_p[0].remove();
+        }
+        argument_count = 0;
+        let args_list;
+        let args_object; // JSON object in scenarioObject
+        let selected_domain_index = getIndexByKey(window['selected_domain_name'], scenarioObject["domains"]);
+
+        switch (type) {
+            case "acls":
+                // fields: for, to, right, inheritance
+                args_list = ["for", "to", "right", "inheritance"];
+                let acl_object = scenarioObject["domains"][selected_domain_index][window['selected_domain_name']]["acls"];
+                args_object = acl_object[getIndexByKey(selectedOption, acl_object)][selectedOption];
+                break;
+            case "users":
+                // fields: firstname, surname, password, city, description, groups, path
+                args_list = ["firstname", "surname", "password", "city", "description", "groups", "path"];
+                let user_object = scenarioObject["domains"][selected_domain_index][window['selected_domain_name']]["users"];
+                args_object = user_object[getIndexByKey(selectedOption, user_object)][selectedOption];
+                break;
+            default:
+                break;
+        }
+
+        modal = document.getElementsByClassName('modal-body')[0];
+        if (args_list.length == 0) {
+            const p = document.createElement("p");
+            p.innerHTML = "No argument available";
+            modal.appendChild(p);
+            return;
+        }
+        for (let i = 0; i < args_list.length; i++) {
+            argument_count += 1;
+            let arg = args_list[i];
+            let template = document.getElementById('argument');
+            let clone = template.cloneNode(true);
+            clone.id = 'argument-' + argument_count;
+            clone.hidden = false;
+            clone.classList.add(type);
+            clone.getElementsByTagName('label')[0].innerHTML = arg;
+            clone.getElementsByTagName('input')[0].placeholder = arg;
+            clone.getElementsByTagName('input')[0].ariaLabel = arg;
+            clone.getElementsByTagName('input')[0].id = arg;
+            const arg_val = args_object[arg];
+            if (arg_val !== null && arg_val !== undefined) {
+                clone.getElementsByTagName('input')[0].value = arg_val;
+            } else {
+                args_object[arg] = "";
+                window.localStorage.setItem("scenarioObject", JSON.stringify(scenarioObject))
+            }
+            modal.appendChild(clone);
+        }
+    }
+
+    function updateArgumentValue(element) {
+        let arg = element.id;
+        let type = element.parentElement.parentElement.classList[2];
+        let re = /Argument\(s\) of (.*)/g;
+        let key = re.exec(document.getElementById(`vuln-modal`).querySelector('.modal-title').textContent)[1];
+        let selected_domain_index = getIndexByKey(window['selected_domain_name'], scenarioObject["domains"]);
+        let args_object;
+
+        switch (type) {
+            case "acls":
+                // fields: for, to, right, inheritance
+                let acl_object = scenarioObject["domains"][selected_domain_index][window['selected_domain_name']]["acls"];
+                args_object = acl_object[getIndexByKey(key, acl_object)][key];
+                args_object[arg] = element.value;
+                break;
+            case "users":
+                // fields: firstname, surname, password, city, description, groups, path
+                let user_object = scenarioObject["domains"][selected_domain_index][window['selected_domain_name']]["users"];
+                args_object = user_object[getIndexByKey(key, user_object)][key];
+                args_object[arg] = element.value;
+                break;
+            default:
+                break;
+        }
+        window.localStorage.setItem("scenarioObject", JSON.stringify(scenarioObject))
+
+    }
+
+    function addMultipleInput(parentId, property, count) {
+        let parent = document.getElementById(parentId);
+        let clone = parent.cloneNode(true);
+        let currentId = parentId + "-" + count;
+        clone.id = currentId;
+        clone.hidden = false;
+        parent.parentNode.appendChild(clone);
+
+        // fix duplicate form field id when adding new field
+        let inputElements = clone.querySelectorAll("input");
+        for (let i = 0; i < inputElements.length; i++) {
+            inputElements[i].id = property + "-input-" + count + "-" + (i + 1);
+        }
+    }
+
+    function addInputWithModal(parentId, property, count) {
+        let parent = document.getElementById(parentId);
+        let clone = parent.cloneNode(true);
+        let currentId = parentId + "-" + count;
+        clone.id = currentId;
+        clone.hidden = false;
+        parent.parentNode.appendChild(clone);
+
+        // fix duplicate form field id when adding new field
+        let selectElement = clone.querySelector("input");
+        selectElement.id = property + "-input-" + count;
+    }
+
+    function convertToJSON() {
+
+        let selected_domain = document.getElementsByClassName("list-group-item-action active")[0].innerHTML;
+        let selected_domain_index = getIndexByKey(selected_domain, scenarioObject["domains"]);
+
+        // Get dc
+        domain.dc = document.getElementById("dc").querySelector("input").value;
+
+        // Get domain password
+        domain.domain_password = document.getElementById("domain_password").querySelector("input").value;
+
+        // Get netbios_name
+        domain.netbios_name = document.getElementById("netbios_name").querySelector("input").value;
+
+        // Get organisation units
+        let organisationUnits = {};
+        const organisationUnitsDiv = document.getElementById("organisation_units-div");
+        const organisationUnitsInputGroups = organisationUnitsDiv.querySelectorAll("div:not([hidden])"); // select all non-hidden div elements
+        const organisationUnitsArray = [];
+        for (let i = 0; i < organisationUnitsInputGroups.length; i++) {
+            const ouNameInput = organisationUnitsInputGroups[i].querySelector("input:nth-child(1)");
+            const ouPathInput = organisationUnitsInputGroups[i].querySelector("input:nth-child(2)");
+            const ouName = ouNameInput.value;
+            const ouPath = ouPathInput.value;
+            if (ouName !== "" && ouPath !== "") { // skip empty values
+                organisationUnitsArray.push({ [ouName]: { path: ouPath } });
+            }
+        }
+        for (let i = 0; i < organisationUnitsArray.length; i++) {
+            organisationUnits[i + 1] = organisationUnitsArray[i];
+        }
+        domain.organisation_units = organisationUnits;
+
+        // Get laps path
+        domain.laps_path = document.getElementById("laps_path").querySelector("input").value;
+
+        // Construct group json object
+        domain.groups = { universal: {}, global: {}, domainlocal: {} };
+
+        // Get global groups
+        let globalGroups = {};
+        const globalGroupsDiv = document.getElementById("global_groups-div");
+        const globalGroupsInputGroups = globalGroupsDiv.querySelectorAll("div:not([hidden])"); // select all non-hidden div elements
+        const globalGroupsArray = [];
+        for (let i = 0; i < globalGroupsInputGroups.length; i++) {
+            const globalGroupName = globalGroupsInputGroups[i].querySelector("input:nth-child(1)").value;
+            const globalGroupManagedBy = globalGroupsInputGroups[i].querySelector("input:nth-child(2)").value;
+            const globalGroupPath = globalGroupsInputGroups[i].querySelector("input:nth-child(3)").value;
+            if (globalGroupName !== "" && globalGroupManagedBy !== "" && globalGroupPath !== "") { // skip empty values
+                globalGroupsArray.push({ [globalGroupName]: { managed_by: globalGroupManagedBy, path: globalGroupPath } });
+            }
+        }
+        for (let i = 0; i < globalGroupsArray.length; i++) {
+            globalGroups[i + 1] = globalGroupsArray[i];
+        }
+        domain.groups.global = globalGroups;
+
+        // Get domain local groups
+        let domainLocalGroups = {};
+        const domainLocalGroupsDiv = document.getElementById("domain_local_groups-div");
+        const domainLocalGroupsInputGroups = domainLocalGroupsDiv.querySelectorAll("div:not([hidden])"); // select all non-hidden div elements
+        const domainLocalGroupsArray = [];
+        for (let i = 0; i < domainLocalGroupsInputGroups.length; i++) {
+            const domainLocalGroupName = domainLocalGroupsInputGroups[i].querySelector("input:nth-child(1)").value;
+            const domainLocalGroupPath = domainLocalGroupsInputGroups[i].querySelector("input:nth-child(2)").value;
+            if (domainLocalGroupName !== "" && domainLocalGroupPath !== "") { // skip empty values
+                domainLocalGroupsArray.push({ [domainLocalGroupName]: { path: domainLocalGroupPath } });
+            }
+        }
+        for (let i = 0; i < domainLocalGroupsArray.length; i++) {
+            domainLocalGroups[i + 1] = domainLocalGroupsArray[i];
+        }
+        domain.groups.domainlocal = domainLocalGroups;
+
+        // Get acls
+        let acls = {};
+        const aclsDiv = document.getElementById("acls-div");
+        const aclsInputGroups = aclsDiv.querySelectorAll("div:not([hidden])"); // select all non-hidden div elements
+        const aclsArray = [];
+        const aclsObject = scenarioObject["domains"][selected_domain_index][window['selected_domain_name']]?.acls;
+        for (let i = 0; i < aclsInputGroups.length; i++) {
+            const aclName = aclsInputGroups[i].querySelector("input").value;
+            if (aclName !== "") { // skip empty values
+                let aclsArguments = aclsObject[getIndexByKey(aclName, aclsObject)]?.[aclName];
+                if (aclsArguments !== undefined) {
+                    aclsArray.push({ [aclName]: aclsArguments });
+                } else {
+                    aclsArray.push({ [aclName]: {} });
+                }
+            }
+        }
+        for (let i = 0; i < aclsArray.length; i++) {
+            acls[i + 1] = aclsArray[i];
+        }
+        domain.acls = acls;
+
+        // Get users
+        let users = {};
+        const usersDiv = document.getElementById("users-div");
+        const usersInputGroups = usersDiv.querySelectorAll("div:not([hidden])"); // select all non-hidden div elements
+        const usersArray = [];
+        const usersObject = scenarioObject["domains"][selected_domain_index][window['selected_domain_name']]?.users;
+        for (let i = 0; i < usersInputGroups.length; i++) {
+            const userName = usersInputGroups[i].querySelector("input").value;
+            if (userName !== "") { // skip empty values
+                // usersArray.push({ [userName]: {} }); //TODO Arguments here
+                let usersArguments = usersObject[getIndexByKey(userName, usersObject)]?.[userName];
+                if (usersArguments !== undefined) {
+                    usersArray.push({ [userName]: usersArguments });
+                } else {
+                    usersArray.push({ [userName]: {} });
+                }
+            }
+        }
+        for (let i = 0; i < usersArray.length; i++) {
+            users[i + 1] = usersArray[i];
+        }
+        domain.users = users;
+
+        // FUTURE TODO: fields that are not supported in GUI yet
+        domain.trust = "";
+        domain.multi_domain_groups_member = {};
+
+        scenarioObject["domains"][getIndexByKey(selected_domain, scenarioObject["domains"])] = { [selected_domain]: domain };
+
+        window.localStorage.setItem("scenarioObject", JSON.stringify(scenarioObject));
+    }
+</script>
+{% endblock %}

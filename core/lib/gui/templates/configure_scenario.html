@@ -1,0 +1,406 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% if import_scenario %}
+<p class="text-center fw-bold fs-3 text-decoration-underline p-4"> Import Existing Scenario </p>
+{% else %}
+<p class="text-center fw-bold fs-3 text-decoration-underline p-4"> Create and Run Scenario </p>
+{% endif %}
+
+{% with progress=50 %}
+{% include 'components/progress_bar.html'%}
+{% endwith %}
+
+<div class="row container-fluid text-center mt-5 mx-auto">
+    <div class="col-2 container bg-dark mx-4">
+        <div class="list-group list-group-flush pb-5">
+            <a class="list-group-item text-bg-dark">
+                List of Machines
+            </a>
+        </div>
+        <script>
+            async function resetElements() {
+                // Get all elements with "active" class
+                var elements = document.getElementsByClassName("active");
+
+                // Loop over Elements to remove active class;
+                for (var i = 0; i < elements.length; i++) {
+                    elements[i].classList.remove('active')
+                }
+            }
+
+            function notify(element) {
+                resetElements();
+                element.classList.add('active');
+                selected_machine_id = element.id;
+                readMachineFromStorage();
+            }
+        </script>
+    </div>
+    <div class="col container bg-dark p-5 mx-4 text-start">
+        {% include 'components/vm_configure.html' %}
+    </div>
+</div>
+{% with back_URL='/design', next_URL='/deploy' %}
+{% include 'components/bottom_navbar.html'%}
+{% endwith %}
+
+<script>
+    let machine_count = 0;
+    let account_count = 0;
+    let vulnerability_count = 0;
+    let plugin_count = 0;
+    let scenarioObject = {};
+    let selected_machine_id = "";
+
+    document.addEventListener("DOMContentLoaded", async function () {
+        await readListOfMachinesFromStorage();
+        await readOSOptions();
+        await readVulnerabilitiesOptions();
+        await readPluginOptions();
+        await selectFirstMachine();
+    });
+
+    function readListOfMachinesFromStorage() {
+        if (window.localStorage.getItem("scenarioObject") !== null) {
+            scenarioObject = JSON.parse(window.localStorage.getItem("scenarioObject"));
+            while (true) {
+                let current_id = "machine_" + (machine_count + 1);
+                if (!scenarioObject.hasOwnProperty(current_id)) {
+                    break;
+                }
+                let list_group = document.getElementsByClassName("list-group")[0];
+                const a = document.createElement("a");
+                a.setAttribute("id", current_id);
+                a.setAttribute("onclick", "notify(this)");
+                a.setAttribute("class", "list-group-item list-group-item-action");
+                a.innerHTML = scenarioObject[current_id]["machine_name"];
+                list_group.childNodes[1].appendChild(a);
+                machine_count += 1;
+            }
+        }
+    }
+
+    async function readOSOptions() {
+        let os_list = await fetch(`http://127.0.0.1:5000/api`, { 
+                method: "POST", 
+                body: JSON.stringify({
+                    option: 'os-list'
+                }), 
+                headers: { "Content-type": "application/json; charset=UTF-8" }
+            }).then((response) => response.json());
+        os_list = os_list["return"];
+        let options = document.getElementById("operating-system-options");
+        for (let i = 0; i < os_list.length; i++) {
+            let os = os_list[i];
+            const option = document.createElement("option");
+            option.setAttribute("value", os);
+            option.innerHTML = os;
+            options.appendChild(option);
+        }
+    }
+
+    async function readVulnerabilitiesOptions() {
+        let vuln_list = await fetch(`http://127.0.0.1:5000/api`, { 
+                method: "POST", 
+                body: JSON.stringify({
+                    option: 'vulnerabilities-list'
+                }), 
+                headers: { "Content-type": "application/json; charset=UTF-8" }
+            }).then((response) => response.json());
+        vuln_list = vuln_list["return"];
+        let options = document.getElementById("vuln-options");
+        for (let i = 0; i < vuln_list.length; i++) {
+            let vuln = vuln_list[i];
+            const option = document.createElement("option");
+            option.setAttribute("value", vuln);
+            option.innerHTML = vuln;
+            options.appendChild(option);
+        }
+    }
+
+    async function readPluginOptions() {
+        let plugin_list = await fetch(`http://127.0.0.1:5000/api`, { 
+                method: "POST", 
+                body: JSON.stringify({
+                    option: 'plugin-list'
+                }), 
+                headers: { "Content-type": "application/json; charset=UTF-8" }
+            }).then((response) => response.json());
+        plugin_list = plugin_list["return"];
+        let options = document.getElementById("plugin-options");
+        for (let i = 0; i < plugin_list.length; i++) {
+            let plugin = plugin_list[i];
+            const option = document.createElement("option");
+            option.setAttribute("value", plugin);
+            option.innerHTML = plugin;
+            options.appendChild(option);
+        }
+    }
+
+    function readMachineFromStorage() {
+        readMachineNameFromStorage();
+        readMachineIPFromStorage();
+        readMachineOSFromStorage();
+        readAccountsFromStorage();
+        readVulnerabilitiesFromStorage();
+        readPluginFromStorage();
+    }
+
+    function readMachineNameFromStorage() {
+        if (scenarioObject[selected_machine_id].hasOwnProperty("machine_name")) {
+            let input = document.getElementById("machine-name").getElementsByTagName('input')[0];
+            input.value = scenarioObject[selected_machine_id]["machine_name"];
+        }
+    }
+
+    function readMachineIPFromStorage() {
+        if (scenarioObject[selected_machine_id].hasOwnProperty("ip_address")) {
+            let input = document.getElementById("ip-address").getElementsByTagName('input')[0];
+            input.value = scenarioObject[selected_machine_id]["ip_address"];
+        }
+    }
+
+    function readMachineOSFromStorage() {
+        if (!scenarioObject[selected_machine_id].hasOwnProperty("operating_system")) {
+            scenarioObject[selected_machine_id]["operating_system"] = document.getElementById("operating-system-options").getElementsByTagName('option')[0].value;
+            saveScenario();
+        }
+        let input = document.getElementById("operating-system-options");
+        input.value = scenarioObject[selected_machine_id]["operating_system"];
+    }
+
+
+    function readAccountsFromStorage() {
+        // Remove accounts from previous machine
+        for (let i = 1; i <= account_count; i++) {
+            let account = document.getElementById("account-input-group-" + i);
+            account.remove();
+        }
+        // Read accounts from current selected machine
+        account_count = 0;
+        if (scenarioObject[selected_machine_id].hasOwnProperty("accounts")) {
+            while (true) {
+                if (!scenarioObject[selected_machine_id]["accounts"].hasOwnProperty(account_count + 1)) {
+                    break;
+                }
+                const username = scenarioObject[selected_machine_id]["accounts"][account_count + 1]["username"];
+                const password = scenarioObject[selected_machine_id]["accounts"][account_count + 1]["password"];
+                const privileged = scenarioObject[selected_machine_id]["accounts"][account_count + 1]["privileged"];
+                addAccount(username, password, privileged);
+            }
+        } else {
+            scenarioObject[selected_machine_id]["accounts"] = {};
+            saveScenario();
+        }
+    }
+
+    function readVulnerabilitiesFromStorage() {
+        for (let i = 1; i <= vulnerability_count; i++) {
+            let vuln = document.getElementById("vuln-input-group-" + i);
+            vuln.remove();
+        }
+        vulnerability_count = 0;
+        if (scenarioObject[selected_machine_id].hasOwnProperty("vulnerabilities")) {
+            while (true) {
+                if (!scenarioObject[selected_machine_id]["vulnerabilities"].hasOwnProperty(vulnerability_count + 1)) {
+                    break;
+                }
+                const name = scenarioObject[selected_machine_id]["vulnerabilities"][vulnerability_count + 1]["name"];
+                addVulnerability(name);
+            }
+        } else {
+            scenarioObject[selected_machine_id]["vulnerabilities"] = {};
+            saveScenario();
+        }
+    }
+
+    function readPluginFromStorage() {
+        for (let i = 1; i <= plugin_count; i++) {
+            let plugin = document.getElementById("plugin-input-group-" + i);
+            plugin.remove();
+        }
+        plugin_count = 0;
+        if (scenarioObject[selected_machine_id].hasOwnProperty("plugins")) {
+            while (true) {
+                if (!scenarioObject[selected_machine_id]["plugins"].hasOwnProperty(plugin_count + 1)) {
+                    break;
+                }
+                const name = scenarioObject[selected_machine_id]["plugins"][plugin_count + 1]["name"];
+                addPlugin(name);
+            }
+        } else {
+            scenarioObject[selected_machine_id]["plugins"] = {};
+            saveScenario();
+        }
+    }
+
+    function selectFirstMachine() {
+        if (window.localStorage.getItem("scenarioObject") !== null) {
+            let machine = document.getElementsByClassName("list-group")[0].childNodes[1].childNodes[1];
+            notify(machine);
+            selected_machine_id = machine.id;
+            readAccountsFromStorage();
+        }
+    }
+
+    function addAccount(username, password, privileged) {
+        account_count += 1;
+        let account = document.getElementById("account-input-group");
+        let clone = account.cloneNode(true);
+        let current_id = "account-input-group-" + account_count;
+        clone.id = current_id;
+        clone.hidden = false;
+        if (username !== null && password !== null && privileged !== null) {
+            clone.getElementsByTagName('input')[0].value = username;
+            clone.getElementsByTagName('input')[1].value = password;
+            clone.getElementsByTagName('input')[2].checked = privileged;
+        } else {
+            scenarioObject[selected_machine_id]["accounts"][account_count] = { "username": "", "password": "", "privileged": false };
+            saveScenario();
+        }
+        account.parentNode.appendChild(clone);
+    }
+
+    function addVulnerability(name) {
+        vulnerability_count += 1;
+        let vuln = document.getElementById("vuln-input-group");
+        let clone = vuln.cloneNode(true);
+        let current_id = "vuln-input-group-" + vulnerability_count;
+        clone.id = current_id;
+        clone.hidden = false;
+        if (name !== null) {
+            clone.getElementsByTagName('select')[0].value = name;
+        } else {
+            scenarioObject[selected_machine_id]["vulnerabilities"][vulnerability_count] = { "name": document.getElementById("vuln-options").getElementsByTagName('option')[0].value, "args": {} };
+            saveScenario();
+        }
+        vuln.parentNode.appendChild(clone);
+    }
+
+    function addPlugin(name) {
+        plugin_count += 1;
+        let plugin = document.getElementById("plugin-input-group");
+        let clone = plugin.cloneNode(true);
+        let current_id = "plugin-input-group-" + plugin_count;
+        clone.id = current_id;
+        clone.hidden = false;
+        if (name !== null) {
+            clone.getElementsByTagName('select')[0].value = name;
+        } else {
+            scenarioObject[selected_machine_id]["plugins"][plugin_count] = { "name": document.getElementById("plugin-options").getElementsByTagName('option')[0].value, "args": {} };
+            saveScenario();
+        }
+        plugin.parentNode.appendChild(clone);
+    }
+
+    function updateOS(element) {
+        scenarioObject[selected_machine_id]["operating_system"] = element.value;
+        saveScenario();
+    }
+
+    function updateAccountUsername(element) {
+        let account_id = element.parentNode.id.split('-')[3];
+        scenarioObject[selected_machine_id]["accounts"][account_id]["username"] = element.value;
+        saveScenario();
+    }
+
+    function updateAccountPassword(element) {
+        let account_id = element.parentNode.id.split('-')[3];
+        scenarioObject[selected_machine_id]["accounts"][account_id]["password"] = element.value;
+        saveScenario();
+    }
+
+    function updateAccountPrivileged(element) {
+        let account_id = element.parentNode.parentNode.id.split('-')[3];
+        scenarioObject[selected_machine_id]["accounts"][account_id]["privileged"] = element.checked;
+        saveScenario();
+    }
+
+    function updateVulnerabilityName(element) {
+        let vuln_id = element.parentNode.id.split('-')[3];
+        scenarioObject[selected_machine_id]["vulnerabilities"][vuln_id]["name"] = element.value;
+        saveScenario();
+    }
+
+    function updatePluginName(element) {
+        let plugin_id = element.parentNode.id.split('-')[3];
+        scenarioObject[selected_machine_id]["plugins"][plugin_id]["name"] = element.value;
+        saveScenario();
+    }
+
+    function removeAccount() {
+        counter = 0;
+        for (let i = 1; i <= account_count; i++) {
+            let account = document.getElementById("account-input-group-" + i);
+            if (account != null) {
+                counter += 1;
+                account.id = "account-input-group-" + counter;
+                scenarioObject[selected_machine_id]["accounts"][counter] = scenarioObject[selected_machine_id]["accounts"][i];
+            }
+        }
+        delete scenarioObject[selected_machine_id]["accounts"][account_count];
+        saveScenario();
+        account_count -= 1;
+    }
+
+    function removeVulnerability() {
+        counter = 0;
+        for (let i = 1; i <= vulnerability_count; i++) {
+            let vuln = document.getElementById("vuln-input-group-" + i);
+            if (vuln != null) {
+                counter += 1;
+                vuln.id = "vuln-input-group-" + counter;
+                scenarioObject[selected_machine_id]["vulnerabilities"][counter] = scenarioObject[selected_machine_id]["vulnerabilities"][i];
+            }
+        }
+        delete scenarioObject[selected_machine_id]["vulnerabilities"][vulnerability_count];
+        saveScenario();
+        vulnerability_count -= 1;
+    }
+
+    function removePlugin() {
+        counter = 0;
+        for (let i = 1; i <= plugin_count; i++) {
+            let plugin = document.getElementById("plugin-input-group-" + i);
+            if (plugin != null) {
+                counter += 1;
+                plugin.id = "plugin-input-group-" + counter;
+                scenarioObject[selected_machine_id]["plugins"][counter] = scenarioObject[selected_machine_id]["plugins"][i];
+            }
+        }
+        delete scenarioObject[selected_machine_id]["plugins"][plugin_count];
+        saveScenario();
+        plugin_count -= 1;
+    }
+
+    function saveScenario() {
+        window.localStorage.setItem("scenarioObject", JSON.stringify(scenarioObject));
+    }
+
+    async function uploadScenario() {
+        await fetch(`http://127.0.0.1:5000/api`, { 
+            method: "POST", 
+            body: JSON.stringify({
+                option: 'json-to-file',
+                scenarioObject: scenarioObject
+            }), 
+            headers: { "Content-type": "application/json; charset=UTF-8" }
+        }).then((response) => response.json());
+    }
+
+    async function readScenario(scenario_name) {
+        scenarioObject = await fetch(`http://127.0.0.1:5000/api`, { 
+            method: "POST", 
+            body: JSON.stringify({
+                option: 'file-to-json',
+                scenarioName: scenario_name
+            }), 
+            headers: { "Content-type": "application/json; charset=UTF-8" }
+        }).then((response) => response.json());
+        scenarioObject = scenarioObject["return"];
+        saveScenario();
+    }
+</script>
+{% endblock %}

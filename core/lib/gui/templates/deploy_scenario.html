@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% if import_scenario %}
+<p class="text-center fw-bold fs-3 text-decoration-underline p-4"> Import Existing Scenario </p>
+{% else %}
+<p class="text-center fw-bold fs-3 text-decoration-underline p-4"> Create and Run Scenario </p>
+{% endif %}
+
+{% with progress=100 %}
+{% include 'components/progress_bar.html'%}
+{% endwith %}
+<h2 class="text-center pb-4">Creating VM(s) ...</h2>
+<div class="col container bg-dark p-5 mx-auto">
+    <div id="deploy-log" style="white-space: pre-line; height: 50vh; max-height: 50vh;"
+        class="text-start overflow-scroll"></div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"
+    integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA=="
+    crossorigin="anonymous"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", async function () {
+        await uploadandrunScenario();
+    })
+
+    async function uploadandrunScenario() {
+        if (window.localStorage.getItem("scenarioObject") !== null) {
+            scenarioObject = JSON.parse(window.localStorage.getItem("scenarioObject"));
+            let scenarioName = await fetch(`http://127.0.0.1:5000/api`, {
+                method: "POST",
+                body: JSON.stringify({
+                    option: 'json-to-file',
+                    scenarioObject: scenarioObject
+                }),
+                headers: { "Content-type": "application/json; charset=UTF-8" }
+            }).then((response) => response.json());
+            scenarioName = scenarioName['return']
+            await fetch(`http://127.0.0.1:5000/api`, {
+                method: "POST",
+                body: JSON.stringify({
+                    option: 'run-scenario',
+                    scenarioName: scenarioName
+                }),
+                headers: { "Content-type": "application/json; charset=UTF-8" }
+            }).then((response) => response.json());
+        }
+    }
+
+    var socket = io();
+    socket.on('log', function (log) {
+        document.getElementById("deploy-log").innerHTML = log['log'];
+    })
+</script>
+{% endblock %}

@@ -1,0 +1,11 @@
+- name: Ensure dest directory exists
+  ansible.windows.win_file:
+    path: "{{item.value.dest}}"
+    state: directory
+  with_dict: "{{ vulns_vars }}"
+
+- name: Copy a single file
+  ansible.windows.win_copy:
+    src: "../../../projects/{{project_folder}}/files/{{item.value.src}}"
+    dest: "{{item.value.dest}}"
+  with_dict: "{{ vulns_vars }}"

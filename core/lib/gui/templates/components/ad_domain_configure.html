@@ -1,0 +1,213 @@
+{% include 'components/configure_modal.html' %}
+
+<div class="mb-3 row" id="dc">
+    <label for="dc-input" class="col-sm-2 col-form-label">DC</label>
+    <div class="col-sm-10 align-content-center">
+        <input id="dc-input" class="form-control" type="text" placeholder="DC" aria-label="DC"
+            onchange="convertToJSON();">
+    </div>
+</div>
+
+<div class="mb-3 row" id="domain_password">
+    <label for="domain_password-input" class="col-sm-2 col-form-label">Domain Password</label>
+    <div class="col-sm-10 align-content-center">
+        <input id="domain_password-input" class="form-control" type="text" placeholder="Domain Password"
+            aria-label="Domain Password" onchange="convertToJSON();">
+    </div>
+</div>
+
+<div class=" mb-3 row" id="netbios_name">
+    <label for="netbios_name-input" class="col-sm-2 col-form-label">NetBIOS Name</label>
+    <div class="col-sm-10 align-content-center">
+        <input id="netbios_name-input" class="form-control" type="text" placeholder="NetBIOS Name"
+            aria-label="NetBIOS Name" onchange="convertToJSON();">
+    </div>
+</div>
+
+<div class="mb-3 row" id="organisation_units">
+    <label for="organisation_units-input" class="col-sm-2 col-form-label">Organisation Units</label>
+    <div class="row-sm-10 text-center">
+        <div id="organisation_units-div">
+            <div class="input-group m-3" id="organisation_units-input-group" hidden>
+                <input id="ou_name-input" type="text" aria-label="OU Name" placeholder="OU Name" class="form-control"
+                    onchange="convertToJSON();">
+                <input id="ou_path-input" type="text" aria-label="Path" placeholder="Path" class="form-control"
+                    onchange="convertToJSON();">
+                <button type="button" class="btn btn-sm btn-danger mx-4"
+                    onclick="removeOrganisationUnit(this); convertToJSON();" style="border-radius: 6px;">X</button>
+            </div>
+        </div>
+        <button type="button" class="btn btn-dark btn-sm" onclick="addOrganisationUnit(); convertToJSON();">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-plus-circle"
+                viewBox="0 0 16 16">
+                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
+                <path
+                    d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
+            </svg>
+        </button>
+    </div>
+</div>
+
+<div class="mb-3 row" id="laps_path">
+    <label for="laps_path-input" class="col-sm-2 col-form-label">LAPS Path</label>
+    <div class="col-sm-10 align-content-center">
+        <input id="laps_path-input" class="form-control" type="text" placeholder="LAPS Path" aria-label="LAPS Path"
+            onchange="convertToJSON();">
+    </div>
+</div>
+
+<div class="mb-3 row" id="global_groups">
+    <label for="global_groups-input" class="col-sm-2 col-form-label">Global Groups</label>
+    <div class="row-sm-10 text-center">
+        <div id="global_groups-div">
+            <div class="input-group m-3" id="global_groups-input-group" hidden>
+                <input id="global_group_name-input" type="text" aria-label="Group Name" placeholder="Group Name"
+                    class="form-control" onchange="convertToJSON();">
+                <input id="global_group_managed_by-input" type="text" aria-label="Managed By" placeholder="Managed By"
+                    class="form-control" onchange="convertToJSON();">
+                <input id="global_group_path-input" type="text" aria-label="Path" placeholder="Path"
+                    class="form-control" onchange="convertToJSON();">
+                <button type="button" class="btn btn-sm btn-danger mx-4"
+                    onclick="removeGlobalGroup(this); convertToJSON();" style="border-radius: 6px;">X</button>
+            </div>
+        </div>
+        <button type="button" class="btn btn-dark btn-sm" onclick="addGlobalGroup(); convertToJSON();">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-plus-circle"
+                viewBox="0 0 16 16">
+                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
+                <path
+                    d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
+            </svg>
+        </button>
+    </div>
+</div>
+
+<div class="mb-3 row" id="domain_local_groups">
+    <label for="domain_local_groups-input" class="col-sm-2 col-form-label">Domain Local Groups</label>
+    <div class="row-sm-10 text-center">
+        <div id="domain_local_groups-div">
+            <div class="input-group m-3" id="domain_local_groups-input-group" hidden>
+                <input id="domain_local_group_name-input" type="text" aria-label="Group Name" placeholder="Group Name"
+                    class="form-control" onchange="convertToJSON();">
+                <input id="domain_local_group_path-input" type="text" aria-label="Path" placeholder="Path"
+                    class="form-control" onchange="convertToJSON();">
+                <button type="button" class="btn btn-sm btn-danger mx-4"
+                    onclick="removeDomainLocalGroup(this); convertToJSON();" style="border-radius: 6px;">X</button>
+            </div>
+        </div>
+        <button type="button" class="btn btn-dark btn-sm" onclick="addDomainLocalGroup(); convertToJSON();">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-plus-circle"
+                viewBox="0 0 16 16">
+                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
+                <path
+                    d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
+            </svg>
+        </button>
+    </div>
+</div>
+
+<div class="mb-3 row" id="acls">
+    <label for="acls-options" class="col-sm-2 col-form-label">ACLs</label>
+    <div class="row-sm-10 text-center">
+        <div id="acls-div">
+            <div class="input-group m-3" id="acls-input-group" hidden>
+                <input id="acl-input" class="form-control" type="text" placeholder="ACL Name" aria-label="ACL Bame"
+                    onchange="convertToJSON();">
+                <button class="btn btn-primary rounded-button mx-5" type="button" id="button-args2"
+                    onclick="createModal('acls', this);">...</button>
+                <button type="button" class="btn btn-sm btn-danger m-auto" onclick="removeAcl(this); convertToJSON();"
+                    style="border-radius: 6px;">X</button>
+            </div>
+        </div>
+        <button type="button" class="btn btn-dark btn-sm" onclick="addAcl(); convertToJSON();">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-plus-circle"
+                viewBox="0 0 16 16">
+                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
+                <path
+                    d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
+            </svg>
+        </button>
+    </div>
+</div>
+
+<div class="mb-3 row" id="users">
+    <label for="users-options" class="col-sm-2 col-form-label">Users</label>
+    <div class="row-sm-10 text-center">
+        <div id="users-div">
+            <div class="input-group m-3" id="users-input-group" hidden>
+                <input id="username-input" class="form-control" type="text" placeholder="Username" aria-label="Username"
+                    onchange="convertToJSON();">
+                <button class="btn btn-primary rounded-button mx-5" type="button" id="button-args2"
+                    onclick="createModal('users', this);">...</button>
+                <button type="button" class="btn btn-sm btn-danger m-auto" onclick="removeUser(this);convertToJSON();"
+                    style="border-radius: 6px;">X</button>
+            </div>
+        </div>
+        <button type="button" class="btn btn-dark btn-sm" onclick="addUser(); convertToJSON();">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-plus-circle"
+                viewBox="0 0 16 16">
+                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
+                <path
+                    d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
+            </svg>
+        </button>
+    </div>
+</div>
+
+<script>
+    let organisation_unit_count = 0;
+    let global_group_count = 0;
+    let domain_local_group_count = 0;
+    let acl_count = 0;
+    let user_count = 0;
+
+    function addOrganisationUnit() {
+        organisation_unit_count += 1;
+        addMultipleInput("organisation_units-input-group", "organisation_units", organisation_unit_count);
+    }
+
+    function removeOrganisationUnit(element) {
+        element.parentElement.remove();
+        organisation_unit_count -= 1;
+    }
+
+    function addGlobalGroup() {
+        global_group_count += 1;
+        addMultipleInput("global_groups-input-group", "global_groups", global_group_count);
+    }
+
+    function removeGlobalGroup(element) {
+        element.parentElement.remove();
+        global_group_count -= 1;
+    }
+
+    function addDomainLocalGroup() {
+        domain_local_group_count += 1;
+        addMultipleInput("domain_local_groups-input-group", "domain_local_groups", domain_local_group_count);
+    }
+
+    function removeDomainLocalGroup(element) {
+        element.parentElement.remove();
+        domain_local_group_count -= 1;
+    }
+
+    function addAcl() {
+        acl_count += 1;
+        addInputWithModal("acls-input-group", "acls", acl_count);
+    }
+
+    function removeAcl(element) {
+        element.parentElement.remove();
+        acl_count -= 1;
+    }
+
+    function addUser() {
+        user_count += 1;
+        addInputWithModal("users-input-group", "users", user_count);
+    }
+
+    function removeUser(element) {
+        element.parentElement.remove();
+        user_count -= 1;
+    }
+</script>

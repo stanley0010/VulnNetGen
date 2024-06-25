@@ -1,0 +1,299 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% if import_scenario %}
+<p class="text-center fw-bold fs-3 text-decoration-underline p-4"> Import Existing Scenario </p>
+{% else %}
+<p class="text-center fw-bold fs-3 text-decoration-underline p-4"> Create and Run Scenario </p>
+{% endif %}
+
+{% with progress=0 %}
+{% include 'components/progress_bar.html'%}
+{% endwith %}
+<div class="row container-fluid text-center my-5 justify-content-center">
+    <div class="col container bg-dark p-5 mx-5 overflow-scroll" style="max-height: 65vh;">
+        {% include 'components/scenario_info_input.html'%}
+        {% include 'components/vm_input.html'%}
+    </div>
+    <div class="col-2 text-center">
+        <button type="button" class="btn btn-danger" onclick="addMachine(null, null)">+ Machine</button>
+        <div class="form-check mt-4">
+            <input class=" form-check-input" type="checkbox" value="" id="ADScenarioCheckBox"
+                onchange="changeToADScenario(this.checked);">
+            <label class="form-check-label" for="ADScenarioCheckBox">
+                AD Scenario
+            </label>
+        </div>
+    </div>
+</div>
+
+{% with back_URL='', next_URL='/configure' %}
+{% include 'components/bottom_navbar.html'%}
+{% endwith %}
+
+<script>
+    let machine_count = 0;
+    let scenarioObject = {};
+    let domain_name_count = 0;
+    let domain_names = [];
+    let AD = false;
+    let oldRedirectFunction = undefined;
+
+    document.addEventListener("DOMContentLoaded", () => {
+        scenarioObject["domains"] = {};
+        document.getElementById("machine").hidden = true;
+        if (window.localStorage.getItem("scenarioObject") !== null) {
+            scenarioObject = JSON.parse(window.localStorage.getItem("scenarioObject"));
+            if (!scenarioObject.hasOwnProperty("domains")) {
+                scenarioObject["domains"] = {};
+            }
+            let domains = scenarioObject['domains'];
+            if (domains && Object.keys(domains).length > 0) {
+                document.getElementById("ADScenarioCheckBox").checked = true;
+                document.getElementById("domain_names").hidden = false;
+                changeToADScenario(true);
+                domain_name_count = Object.keys(domains).length;
+
+                for (let i = 0; i < Object.keys(domains).length; i++) {
+                    addDomainNameInput();
+                }
+                let domain_inputs = document.querySelectorAll('[id^=domain_name-input-]');
+                for (let i = 0; i < Object.keys(domains).length; i++) {
+                    domain_inputs[i].value = Object.keys(domains[i + 1])[0];
+                }
+            }
+            let scenario_name = scenarioObject['scenario_name']
+            if (scenario_name !== null && scenario_name !== undefined)
+                document.getElementById('scenarioName').value = scenario_name;
+            let author = scenarioObject['author']
+            if (author !== null && author !== undefined)
+                document.getElementById('author').value = author;
+            let difficulty = scenarioObject['difficulty']
+            if (difficulty !== null && difficulty !== undefined)
+                document.getElementById('difficulty').value = difficulty;
+            let description = scenarioObject['description']
+            if (description !== null && description !== undefined)
+                document.getElementById('scenarioDescription').value = description;
+            while (true) {
+                let current_id = "machine_" + (machine_count + 1);
+                if (scenarioObject.hasOwnProperty(current_id)) {
+                    addMachine(scenarioObject[current_id]["machine_name"], scenarioObject[current_id]["ip_address"]);
+                } else if (scenarioObject["systems"]?.[machine_count + 1]) {
+                    addMachine(scenarioObject["systems"]?.[machine_count + 1]?.["hostname"], scenarioObject["systems"]?.[machine_count + 1]?.["ip"]);
+                } else {
+                    break;
+                }
+            }
+        } else {
+            addMachine(null, null);
+        }
+    });
+
+    function addDomainNameInput() {
+        domain_name_count += 1;
+
+        const parent = document.getElementById("domain_names-input-group");
+        const newInputGroup = parent.cloneNode(true);
+        newInputGroup.id = "domain_names-input-group-" + domain_name_count;
+        newInputGroup.hidden = false;
+
+        const newInput = newInputGroup.querySelector("input");
+        newInput.id = "domain_name-input-" + domain_name_count;
+        newInput.value = ""; // Reset the input value
+
+        const removeButton = newInputGroup.querySelector("button");
+        removeButton.onclick = function () {
+            removeDomainName(newInput);
+        };
+
+        parent.parentNode.appendChild(newInputGroup);
+    }
+
+    function removeDomainName(element) {
+        const domainName = element.parentElement.querySelector("input").value;
+        element.parentElement.remove();
+
+        for (i in scenarioObject["domains"]) {
+            if (Object.keys(scenarioObject["domains"][i])[0] === domainName) {
+                for (let j = parseInt(i); j <= Object.keys(scenarioObject["domains"]).length; j++) {
+                    if (scenarioObject["domains"][j + 1] !== undefined) {
+                        scenarioObject["domains"][j] = scenarioObject["domains"][j + 1];
+                    } else {
+                        delete scenarioObject["domains"][j];
+                    }
+                }
+            } else {
+                continue;
+            }
+            if (!(i in scenarioObject["domains"])) {
+                break;
+            }
+        }
+
+        saveScenario();
+        domain_name_count -= 1;
+    }
+
+    function changeToADScenario(isADScenario) {
+        AD = isADScenario;
+        if (oldRedirectFunction === undefined) {
+            oldRedirectFunction = document.getElementById("next").getAttribute('onclick');
+        }
+        if (isADScenario) {
+            scenarioObject["AD"] = true;
+            saveScenario();
+            document.getElementById("domain_names").hidden = false;
+            document.getElementById("next").setAttribute('onclick', "redirectIfValidated('/create/configure-ad-domains')");
+        } else {
+            scenarioObject["AD"] = false;
+            saveScenario();
+            document.getElementById("domain_names").hidden = true;
+            document.getElementById("next").setAttribute('onclick', oldRedirectFunction);
+        }
+    }
+
+    function validateMachineName(element) {
+        var errorText = element.parentNode.querySelector('.invalid-feedback');
+
+        if (element.value.trim().length === 0) {
+            element.classList.add('is-invalid');
+            errorText.style.display = 'block';
+        } else {
+            element.classList.remove('is-invalid');
+            errorText.style.display = 'none';
+        }
+    }
+
+    function validateIP(element) {
+        var ipPattern = /^((([1-9])|([1-9][0-9])|(1[0-9][0-9])|(2[0-4][0-9])|(25[0-5]))\.){3}(([1-9])|([1-9][0-9])|(1[0-9][0-9])|(2[0-4][0-9])|(25[0-5])){1,3}$/;
+        var errorText = element.parentNode.querySelector('.invalid-feedback');
+
+        if (!ipPattern.test(element.value)) {
+            element.classList.add('is-invalid');
+            errorText.style.display = 'block';
+        } else {
+            element.classList.remove('is-invalid');
+            errorText.style.display = 'none';
+        }
+    }
+
+    function addMachine(machine_name, ip_address) {
+        machine_count += 1;
+        let machine = document.getElementById("machine");
+        let clone = machine.cloneNode(true);
+        let current_id = "machine_" + machine_count;
+        clone.id = current_id;
+        clone.hidden = false;
+
+        // updating two input fields' id to unique id: "machine_name" -> "machine_name_1"
+        clone.getElementsByTagName('input')[0].id = "machine_name_" + machine_count;
+        clone.getElementsByTagName('input')[1].id = "machine_IP_" + machine_count;
+
+        if (machine_name !== null && ip_address !== null) {
+            clone.getElementsByTagName('input')[0].value = machine_name || "";
+            clone.getElementsByTagName('input')[1].value = ip_address || "";
+        } else {
+            scenarioObject[current_id] = { "machine_name": "", "ip_address": "" };
+            saveScenario();
+        }
+        machine.parentNode.appendChild(clone);
+    }
+
+    function updateDomainName(element) {
+        const oldValue = element.oldValue;
+        const currentValue = element.value;
+        let index = -1;
+        let isExistingValue = false;
+        // Search the domain name in the scenarioObject
+        for (let i = 0; i < Object.values(scenarioObject["domains"]).length; i++) {
+            if (Object.values(scenarioObject["domains"])[i][oldValue] === undefined) {
+                continue;
+            } else {
+                isExistingValue = true;
+                break;
+            }
+        }
+
+
+        if (isExistingValue) {
+            // Update existing value
+            for (i in scenarioObject["domains"]) {
+                if (Object.keys(scenarioObject["domains"][i])[0] === oldValue) {
+                    scenarioObject["domains"][i] = { [currentValue]: {} };
+                    break;
+                }
+            }
+        } else {
+            // Add new value
+            scenarioObject["domains"][domain_name_count] = { [currentValue]: {} };
+        }
+        saveScenario();
+    }
+
+    function updateMachineName(element) {
+        let machine_id = element.parentNode.parentNode.parentNode.id; // eg. "machine_1"
+        let re = /machine_(.*)/;
+        let id = re.exec(machine_id)[1];
+        if (scenarioObject.hasOwnProperty(machine_id)) {
+            scenarioObject[machine_id]["machine_name"] = element.value;
+        } else if (scenarioObject["systems"]?.[id]) {
+            scenarioObject["systems"][id]["hostname"] = element.value;
+        }
+        saveScenario();
+    }
+
+    function updateMachineIP(element) {
+        let machine_id = element.parentNode.parentNode.parentNode.id;
+        let re = /machine_(.*)/;
+        let id = re.exec(machine_id)[1];
+        if (scenarioObject.hasOwnProperty(machine_id)) {
+            scenarioObject[machine_id]["ip_address"] = element.value;
+        } else if (scenarioObject["systems"]?.[id]) {
+            scenarioObject["systems"][id]["ip"] = element.value;
+        }
+        saveScenario();
+    }
+
+    function updateScenarioName(element) {
+        scenarioObject["scenario_name"] = element.value;
+        saveScenario();
+    }
+
+    function updateAuthor(element) {
+        scenarioObject["author"] = element.value;
+        saveScenario();
+    }
+
+    function updateDifficulty(element) {
+        scenarioObject["difficulty"] = element.value;
+        saveScenario();
+    }
+
+    function updateDescription(element) {
+        scenarioObject["description"] = element.value;
+        saveScenario();
+    }
+
+    function removeMachine() {
+        counter = 0;
+        for (let i = 1; i <= machine_count; i++) {
+            let machine = document.getElementById("machine_" + i);
+            if (machine != null) {
+                counter += 1;
+                machine.id = "machine_" + counter;
+                machine.getElementsByTagName('input')[0].id = "machine_name_" + counter;
+                machine.getElementsByTagName('input')[1].id = "machine_IP_" + counter;
+                scenarioObject["machine_" + counter] = scenarioObject["machine_" + i];
+            }
+        }
+        // delete scenarioObject["machine_" + machine_count];
+        saveScenario();
+        machine_count -= 1;
+    }
+
+    function saveScenario() {
+        window.localStorage.setItem("scenarioObject", JSON.stringify(scenarioObject));
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,228 @@
+{% include 'components/configure_modal.html' %}
+
+<div class="mb-3 row" id="machine-name">
+    <label for="machineName" class="col-sm-2 col-form-label">Machine Name</label>
+    <div class="col-sm-10">
+        <input class="form-control" type="text" placeholder="Machine name" aria-label="Machine Name" disabled>
+    </div>
+</div>
+<div class="mb-3 row" id="ip-address">
+    <label for="ip" class="col-sm-2 col-form-label">IP Address</label>
+    <div class="col-sm-10">
+        <input class="form-control" type="text" placeholder="IP Address" aria-label="IP Address" disabled>
+    </div>
+</div>
+<div class="mb-3 row" id="operating-system">
+    <label for="operatingSystem" class="col-sm-2 col-form-label">Operating System</label>
+    <div class="col-sm-10">
+        <select class="form-select" aria-label="Operating System" id="operating-system-options"
+            onchange="updateOS(this);">
+        </select>
+    </div>
+</div>
+<div class="mb-3 row">
+    <label for="Accounts" class="col-sm-2 col-form-label">Accounts</label>
+    <div class="row-sm-10 text-center">
+        <div id="account-div">
+            <div class="input-group m-3 has-validation" id="account-input-group" hidden>
+                <div id="errorText" class="invalid-feedback" style="text-align: left;">Windows Password Policy requires
+                    complex password. Read <a href="javascript:void(0);" data-bs-toggle="tooltip"
+                        data-bs-trigger="hover" data-bs-title="
+                    Must be at least 12 characters long.
+                    Must contain at least one lowercase letter.
+                    Must contain at least one uppercase letter.
+                    Must contain at least one digit.
+                    Must contain at least one special character from the set @$!%*?&.
+                    " style="white-space: nowrap;">more</a>
+                </div>
+                <input type="text" aria-label="Username" placeholder="Username" onblur="updateAccountUsername(this);"
+                    class="form-control">
+                <input type="text" aria-label="Password" placeholder="Password"
+                    onblur="updateAccountPassword(this); validatePasswordForWindows(this);" class="form-control"
+                    required>
+                <div class="form-check px-5 m-auto">
+                    <input class="form-check-input" type="checkbox" value="" id="Privileged"
+                        onclick="updateAccountPrivileged(this);">
+                    <label class="form-check-label" for="Privileged">
+                        Privileged
+                    </label>
+                </div>
+                <button type="button" class="btn btn-sm btn-danger m-auto"
+                    onclick="this.parentElement.remove(); removeAccount()" style="border-radius: 6px;">X</button>
+            </div>
+        </div>
+        <button type="button" class="btn btn-dark btn-sm" onclick="addAccount(null, null, null)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-plus-circle"
+                viewBox="0 0 16 16">
+                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
+                <path
+                    d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
+            </svg>
+        </button>
+    </div>
+</div>
+<div class="mb-3 row">
+    <label for="Vulnerabilities" class="col-sm-2 col-form-label">Vulnerabilities</label>
+    <div class="row-sm-10 text-center">
+        <div id="vuln-div">
+            <div class="input-group m-3" id="vuln-input-group" hidden>
+                <select class="form-select" aria-label="Vulnerabilities" id="vuln-options"
+                    onchange="updateVulnerabilityName(this);">
+                </select>
+                <!-- <button class="btn btn-primary rounded-button mx-5" type="button" id="button-args2"
+                    data-bs-toggle="modal" data-bs-target="#vuln-modal">...</button> -->
+                <button class="btn btn-primary rounded-button mx-5" type="button" id="button-args2"
+                    onclick="createModal('vulnerabilities', this)">...</button>
+                <button type="button" class="btn btn-sm btn-danger m-auto"
+                    onclick="this.parentElement.remove(); removeVulnerability()" style="border-radius: 6px;">X</button>
+            </div>
+        </div>
+        <button type="button" class="btn btn-dark btn-sm" onclick="addVulnerability(null, null)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-plus-circle"
+                viewBox="0 0 16 16">
+                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
+                <path
+                    d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
+            </svg>
+        </button>
+    </div>
+</div>
+<div class="mb-3 row">
+    <label for="Plugins" class="col-sm-2 col-form-label">Plugins</label>
+    <div class="row-sm-10 text-center">
+        <div id="plugin-div">
+            <div class="input-group m-3" id="plugin-input-group" hidden>
+                <select class="form-select" aria-label="Plugins" id="plugin-options" onchange="updatePluginName(this);">
+                </select>
+                <button class="btn btn-primary rounded-button mx-5" type="button" id="button-args2"
+                    onclick="createModal('plugins', this);">...</button>
+                <button type="button" class="btn btn-sm btn-danger m-auto"
+                    onclick="this.parentElement.remove(); removePlugin();" style="border-radius: 6px;">X</button>
+            </div>
+        </div>
+        <button type="button" class="btn btn-dark btn-sm" onclick="addPlugin(null, null);">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-plus-circle"
+                viewBox="0 0 16 16">
+                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
+                <path
+                    d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
+            </svg>
+        </button>
+    </div>
+</div>
+
+<script>
+    let argument_count = 0;
+    let selected_option_id = 0;
+
+    function validatePasswordForWindows(element) {
+        // initialize tooltip for password policy
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+        const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+
+        const osValue = document.getElementById("operating-system-options").value;
+        var passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[#@$!%*?&])[A-Za-z\d#@$!%*?&]{12,}$/;
+        var errorText = element.parentNode.querySelector('.invalid-feedback');
+
+        if (osValue.startsWith("windows")) {
+            if (!passwordPattern.test(element.value)) {
+                element.classList.add('is-invalid');
+                errorText.style.display = 'block';
+            } else {
+                element.classList.remove('is-invalid');
+                errorText.style.display = 'none';
+            }
+        } else {
+            element.classList.remove('is-invalid');
+            errorText.style.display = 'none';
+        }
+    }
+
+    function createModal(type, element) {
+        // type: vuln, plugin
+        // so that the modal knows it is handling vulnerabilities or plugins
+        // TODO: implement later 
+        const myModal = new bootstrap.Modal('#vuln-modal');
+        const DOMModal = document.getElementById('vuln-modal');
+        const modalTitle = DOMModal.querySelector('.modal-title');
+        let selectedOption = element.parentElement.querySelector('.form-select').value;
+        modalTitle.textContent = `Argument(s) of ${selectedOption}`;
+        selected_option_id = element.parentNode.id.split('-')[3];
+        addArguments(type, selectedOption, element);
+        myModal.show();
+    }
+
+    function addArguments(type, selectedOption, element) {
+        const modal = document.getElementById('vuln-modal');
+        const seleceted_arg_id = element.parentNode.id.split('-')[3];
+        addArgumentsOptions(type, seleceted_arg_id, selectedOption, element);
+    }
+
+    async function addArgumentsOptions(type, seleceted_arg_id, selectedOption, element) {
+        for (let i = 1; i <= argument_count; i++) {
+            let arg = document.getElementById('argument-'+i);
+            arg.remove();
+        }
+        let old_p = document.getElementsByClassName('modal-body')[0].getElementsByTagName('p');
+        if (old_p.length > 0) {
+            old_p[0].remove();
+        }
+        argument_count = 0;
+        let args_list;
+        if (type === 'plugins') {
+            args_list = await fetch(`http://127.0.0.1:5000/api`, { 
+                method: "POST", 
+                body: JSON.stringify({
+                    option: 'argument-list',
+                    component: `plugins/${selectedOption}`
+                }), 
+                headers: { "Content-type": "application/json; charset=UTF-8" }
+            }).then((response) => response.json());
+        } else {
+            args_list = await fetch(`http://127.0.0.1:5000/api`, { 
+                method: "POST", 
+                body: JSON.stringify({
+                    option: 'argument-list',
+                    component: `${selectedOption}`
+                }), 
+                headers: { "Content-type": "application/json; charset=UTF-8" }
+            }).then((response) => response.json());
+        }
+        args_list = args_list["return"];
+        let modal = document.getElementsByClassName('modal-body')[0];
+        if (args_list.length == 0) {
+            const p = document.createElement("p");
+            p.innerHTML = "No argument available";
+            modal.appendChild(p);
+            return;
+        }
+        for (let i = 0; i < args_list.length; i++) {
+            argument_count += 1;
+            let arg = args_list[i];
+            let template = document.getElementById('argument');
+            let clone = template.cloneNode(true);
+            clone.id = 'argument-' + argument_count;
+            clone.hidden = false;
+            clone.classList.add(type);
+            clone.getElementsByTagName('label')[0].innerHTML = arg;
+            clone.getElementsByTagName('input')[0].placeholder = arg;
+            clone.getElementsByTagName('input')[0].ariaLabel = arg;
+            clone.getElementsByTagName('input')[0].id = arg;
+            const arg_val = scenarioObject[selected_machine_id][type][seleceted_arg_id]["args"][arg];
+            if (arg_val !== null && arg_val !== undefined) {
+                clone.getElementsByTagName('input')[0].value = arg_val;
+            } else {
+                scenarioObject[selected_machine_id][type][seleceted_arg_id]["args"][arg] = "";
+                saveScenario();
+            }
+            modal.appendChild(clone);
+        }
+    }
+
+    function updateArgumentValue(element) {
+        let arg = element.id;
+        let type = element.parentElement.parentElement.classList[2];
+        scenarioObject[selected_machine_id][type][selected_option_id]["args"][arg] = element.value;
+        saveScenario();
+    }
+</script>

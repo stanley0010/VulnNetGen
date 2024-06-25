@@ -1,0 +1,28 @@
+<nav class="navbar navbar-expand navbar-dark" aria-label="Second navbar example" style="background-color: #394B59;">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" href="{{ url_for('home') }}" style="vertical-align: bottom;">
+            <img src="{{ url_for('static', filename='images/homePageIcon.png') }}" style="width: 35px;" alt="VulnNetGen">
+            <span style="position: relative; bottom:-1px">VulnNetGen</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarsExample02"
+            aria-controls="navbarsExample02" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarsExample02">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link active" aria-current="page" href="{{ url_for('create_design_scenario') }}" onclick="removeScenario()">Create and Run Scenario</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('import_scenario') }}" onclick="removeScenario()">Import Existing Scenario</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+<script>
+    function removeScenario() {
+        window.localStorage.removeItem("scenarioObject");
+    }
+</script>

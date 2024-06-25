@@ -1,0 +1,14 @@
+config.vm.define "$machine_name" do |$machine_name|
+    $machine_name.vm.box = "$box_name"
+    $machine_name.vm.network "private_network", ip: "dhcp"
+    $machine_name.vm.provider "virtualbox" do |v|
+        v.name = "$machine_name"
+    end
+    $machine_name.vm.provision "ansible" do |ansible|
+        ansible.verbose = "v"
+        ansible.playbook = "playbooks/$machine_name/playbook.yaml"
+        ansible.inventory_path = "hosts"
+        ansible.limit = "all"
+        ansible.verbose = "vvv"
+    end
+end  

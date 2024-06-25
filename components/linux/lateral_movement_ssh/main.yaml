@@ -1,0 +1,30 @@
+---
+- hosts: $hostname
+  become: true
+  become_user: root
+
+  tasks:
+    - name: SSH KeyGen command
+      shell: >
+        ssh-keygen -q -b 2048 -t rsa -N "" -C "creating SSH" -f ~/.ssh/id_rsa_$hostname
+        creates="~/.ssh/id_rsa_$hostname"
+    - name: Fetch the keyfile from remote machine to local
+      fetch:
+        src: "~/.ssh/id_rsa_$hostname"
+        dest: "ssh_key/id_rsa_$hostname"
+        flat: yes
+    - name: Add the public key into Authorized_keys file to enable Key Auth
+      shell: "cat ~/.ssh/id_rsa_$hostname.pub >> ~/.ssh/authorized_keys"
+    - name: Make sure /home/ubuntu/ssh directory exists
+      delegate_to: $jump_host
+      file:
+        path: "/home/ubuntu/ssh"
+        state: directory
+    - name: Add key to another machine
+      delegate_to: $jump_host
+      copy:
+        src: "ssh_key/id_rsa_$hostname"
+        dest: "/home/ubuntu/ssh/$hostname_key"
+        owner: root
+        group: root
+        mode: 0600

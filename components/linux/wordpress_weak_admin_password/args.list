@@ -1,0 +1,8 @@
+mysql_root_password
+mysql_db
+mysql_user
+mysql_password
+wordpress_url
+wordpress_admin_user
+wordpress_admin_password
+wordpress_admin_email

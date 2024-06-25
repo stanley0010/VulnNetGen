@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="px-4 pt-5 my-5 text-center border-bottom">
+  <img src="{{ url_for('static', filename='images/homePageIcon.png') }}" class="p-3 m-3" style="width: 20vw;"
+    alt="VulnNetGen">
+  <h1 class="display-4 fw-bold">VulnNetGen</h1>
+  <div class="col-lg-6 mx-auto">
+    <p class="py-4 lead mb-4">
+      A tool to generate a network of randomly vulnerable Linux, Windows, AD
+      machines. <br> For red team and blue team training.
+    </p>
+    <div class="d-grid gap-2 d-sm-flex justify-content-sm-center mb-5">
+      <a href="/create/design" class="btn btn-primary btn-lg px-4" role="button">Get started</a>
+      <a href="https://github.com/stanley0010/VulnNetGen" target="_blank" class="btn btn-outline-secondary btn-lg px-4"
+        role="button">Documentation</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

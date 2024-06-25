@@ -1,0 +1,22 @@
+---
+# Default scenario file
+name: Windows Privileged User
+description: vulnerable Windows Server with weak admin password
+author: RIC1
+difficulty: easy
+systems:
+  - name: windows10
+    base: windows10
+    ip: 192.168.77.8
+    vulnerabilities:
+      - name: "windows/privileged_user"
+        args:
+          password: "password"
+    plugins:
+      - name: flag
+        args:
+          flag: random
+          path: C:\secret\flag.txt
+          owner: root
+          group: root
+          mode: 0700
